@@ -7,31 +7,30 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum ErrorCode {
-
-    NOT_FOUND_USER("4040", HttpStatus.NOT_FOUND, "Not Exist User"),
-    NOT_FOUND_PERFUME("4041", HttpStatus.NOT_FOUND, "Not Exist Perfume"),
-    NOT_FOUND_PERFUME_DETAIL("4042", HttpStatus.NOT_FOUND, "Not Exist Perfume Detail"),
-    NOT_FOUND_PERFUME_VOLUME("4043", HttpStatus.NOT_FOUND, "Not Exist Perfume Volume"),
-    NOT_FOUND_ACCORD("4044", HttpStatus.NOT_FOUND, "Not Exist Accord"),
-    NOT_FOUND_COMMENT("4045", HttpStatus.NOT_FOUND, "Not Exist Comment"),
+    NOT_FOUND_USER("1404", HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다"),
+    NOT_FOUND_PERFUME("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향수입니다"),
+    NOT_FOUND_PERFUME_DETAIL("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향수 상세정보입니다"),
+    NOT_FOUND_PERFUME_VOLUME("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향수 용량입니다"),
+    NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
+    NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
 
     // Bad Request Error
-    NOT_END_POINT("4000",HttpStatus.BAD_REQUEST , "Not Exist End Point Error"),
+    NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
 
     // Server, File Up/DownLoad Error
-    SERVER_ERROR("5000", HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error"),
-    FILE_UPLOAD("5001", HttpStatus.INTERNAL_SERVER_ERROR, "File Upload Fail"),
-    FILE_DOWNLOAD("5002", HttpStatus.INTERNAL_SERVER_ERROR, "File Download Fail"),
+    SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
+    FILE_UPLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다"),
+    FILE_DOWNLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 다운로드에 실패했습니다"),
 
     // Access Denied Error
-    ACCESS_DENIED_ERROR("4010", HttpStatus.UNAUTHORIZED, "Access Denied Token Error"),
+    ACCESS_DENIED_ERROR("1401", HttpStatus.UNAUTHORIZED, "접근이 거부된 토큰입니다"),
 
     // Token Error Set
-    TOKEN_INVALID_ERROR("4011", HttpStatus.UNAUTHORIZED, "Invalid Token Error"),
-    TOKEN_EXPIRED_ERROR("4013", HttpStatus.UNAUTHORIZED, "Expired Token Error"),
-    TOKEN_TYPE_ERROR("4014", HttpStatus.UNAUTHORIZED, "Type Token Error"),
-    TOKEN_UNSUPPORTED_ERROR("4015", HttpStatus.UNAUTHORIZED, "Unsupported Token Error"),
-    TOKEN_UNKNOWN_ERROR("4016", HttpStatus.UNAUTHORIZED, "Unknown Error");
+    TOKEN_INVALID_ERROR("1401", HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다"),
+    TOKEN_EXPIRED_ERROR("1401", HttpStatus.UNAUTHORIZED, "만료된 토큰입니다"),
+    TOKEN_TYPE_ERROR("1401", HttpStatus.UNAUTHORIZED, "토큰 타입 오류입니다"),
+    TOKEN_UNSUPPORTED_ERROR("1401", HttpStatus.UNAUTHORIZED, "지원하지 않는 토큰입니다"),
+    TOKEN_UNKNOWN_ERROR("1401", HttpStatus.UNAUTHORIZED, "알 수 없는 토큰 오류입니다");
 
     private final String code;
     private final HttpStatus httpStatus;

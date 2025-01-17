@@ -1,13 +1,20 @@
 package com.itsuda.perfume.config;
 
+import com.itsuda.perfume.security.CustomAuthenticationProvider;
+import com.itsuda.perfume.security.filter.JwtFilter;
 import com.itsuda.perfume.security.handler.OAuth2LoginFailureHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginSuccessHandler;
 import com.itsuda.perfume.service.CustomOAuth2UserService;
+import com.itsuda.perfume.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -16,6 +23,8 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final JwtUtil jwtUtil;
+    private final CustomAuthenticationProvider customAuthenticationProvider;
 
     @Bean
     protected SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) throws Exception {
@@ -44,6 +53,7 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                 )
+                .addFilterBefore(new JwtFilter(jwtUtil, customAuthenticationProvider), LogoutFilter.class)
                 .getOrBuild();
     }
 }

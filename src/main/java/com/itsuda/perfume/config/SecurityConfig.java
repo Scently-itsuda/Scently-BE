@@ -1,7 +1,11 @@
 package com.itsuda.perfume.config;
 
+import com.itsuda.perfume.security.Constants;
 import com.itsuda.perfume.security.CustomAuthenticationProvider;
+import com.itsuda.perfume.security.JwtAuthEntryPoint;
+import com.itsuda.perfume.security.filter.JwtExceptionFilter;
 import com.itsuda.perfume.security.filter.JwtFilter;
+import com.itsuda.perfume.security.handler.JwtAccessDeniedHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginFailureHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginSuccessHandler;
 import com.itsuda.perfume.service.CustomOAuth2UserService;
@@ -23,6 +27,8 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtUtil jwtUtil;
     private final CustomAuthenticationProvider customAuthenticationProvider;
 
@@ -54,6 +60,14 @@ public class SecurityConfig {
                         )
                 )
                 .addFilterBefore(new JwtFilter(jwtUtil, customAuthenticationProvider), LogoutFilter.class)
+
+                //예외 처리 설정
+                .exceptionHandling(configurer ->
+                        configurer
+                                .authenticationEntryPoint(jwtAuthEntryPoint)
+                                .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
+
                 .getOrBuild();
     }
 }

@@ -1,6 +1,5 @@
 package com.itsuda.perfume.security.factory;
 
-import com.itsuda.perfume.domain.type.GenderType;
 import java.util.Map;
 import lombok.Getter;
 
@@ -13,7 +12,6 @@ public abstract class OAuth2UserInfo {
     }
 
     public abstract String getId();
-    public abstract String getUsername();
     public abstract String getEmail();
-    public abstract GenderType getGender();
+    public abstract String getProfileImageUrl();
 }

@@ -44,9 +44,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                             .provider(provider)
                             .role(ERole.GUEST)
                             // 사용자로부터 선택적으로 제공받는 정보
-                            .username(userInfo.getUsername())
                             .email(userInfo.getEmail())
-                            .gender(userInfo.getGender())
+                            .imageUrl(userInfo.getProfileImageUrl())
                             .build());
                     return UserRepository.UserSecurityForm.invoke(user);
                 });

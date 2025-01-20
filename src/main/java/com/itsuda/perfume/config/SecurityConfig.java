@@ -8,6 +8,8 @@ import com.itsuda.perfume.security.filter.JwtFilter;
 import com.itsuda.perfume.security.handler.JwtAccessDeniedHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginFailureHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginSuccessHandler;
+import com.itsuda.perfume.security.handler.signout.CustomSignOutProcessHandler;
+import com.itsuda.perfume.security.handler.signout.CustomSignOutResultHandler;
 import com.itsuda.perfume.service.CustomOAuth2UserService;
 import com.itsuda.perfume.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -32,6 +33,8 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtUtil jwtUtil;
     private final CustomAuthenticationProvider customAuthenticationProvider;
+    private final CustomSignOutProcessHandler customSignOutProcessHandler;
+    private final CustomSignOutResultHandler customSignOutResultHandler;
 
     @Bean
     protected SecurityFilterChain securityFilterChain(final HttpSecurity httpSecurity) throws Exception {
@@ -59,6 +62,14 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService)
                         )
+                )
+                // 로그아웃 설정
+                .logout(configurer ->
+                        configurer
+                                .logoutUrl("/auth/logout")
+                                .addLogoutHandler(customSignOutProcessHandler)
+                                .logoutSuccessHandler(customSignOutResultHandler)
+                                .deleteCookies("JSESSIONID")
                 )
 
                 //예외 처리 설정

@@ -1,10 +1,9 @@
-package com.itsuda.perfume.service;
+package com.itsuda.perfume.security;
 
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.repository.UserRepository;
-import com.itsuda.perfume.security.CustomUserDetails;
 import com.itsuda.perfume.security.factory.OAuth2UserInfo;
 import com.itsuda.perfume.security.factory.OAuth2UserInfoFactory;
 import lombok.RequiredArgsConstructor;

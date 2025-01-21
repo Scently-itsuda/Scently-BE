@@ -10,7 +10,7 @@ import com.itsuda.perfume.security.handler.OAuth2LoginFailureHandler;
 import com.itsuda.perfume.security.handler.OAuth2LoginSuccessHandler;
 import com.itsuda.perfume.security.handler.signout.CustomSignOutProcessHandler;
 import com.itsuda.perfume.security.handler.signout.CustomSignOutResultHandler;
-import com.itsuda.perfume.service.CustomOAuth2UserService;
+import com.itsuda.perfume.security.CustomOAuth2UserService;
 import com.itsuda.perfume.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

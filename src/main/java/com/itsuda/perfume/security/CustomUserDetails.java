@@ -39,7 +39,7 @@ public class CustomUserDetails implements OAuth2User, UserDetails {
                 EProvider.valueOf(user.getProvider()),
                 "password",
                 user.getRole(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().getRoleCode())
+                Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name())
                 ));
     }
 

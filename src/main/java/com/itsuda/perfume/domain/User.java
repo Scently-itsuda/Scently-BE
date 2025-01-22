@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -26,6 +28,8 @@ public class User {
     @Column(unique = true)
     private String nickname;
 
+    @Column(name = "birth_date")
+    private String birthDate;
     @Column(name = "provider", nullable = false)
     @Enumerated(EnumType.STRING)
     private EProvider provider;
@@ -79,5 +83,22 @@ public class User {
 
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public void register(String nickname) {
+        this.nickname = nickname;
+        this.role = ERole.USER;
+    }
+
+    public void updateUserInfo(GenderType gender, String birthDate, String nickname) {
+        if (nickname != null && (!Objects.equals(this.nickname, nickname))) {
+            this.nickname = nickname;
+        }
+        if (gender != null && (!Objects.equals(this.gender, gender))) {
+            this.gender = gender;
+        }
+        if (birthDate != null && (!Objects.equals(this.birthDate, birthDate))) {
+            this.birthDate = birthDate;
+        }
     }
 } 

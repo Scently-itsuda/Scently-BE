@@ -17,6 +17,7 @@ public enum ErrorCode {
     // Bad Request Error
     NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
     INVALID_HEADER("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 헤더입니다"),
+    INVALID_DATE_FORMAT("1400", HttpStatus.BAD_REQUEST, "날짜는 yyyy-MM-dd 형식이어야 합니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),

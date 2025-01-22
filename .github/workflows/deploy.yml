@@ -23,6 +23,19 @@ jobs:
             export RDS_ENDPOINT="${{ secrets.RDS_ENDPOINT }}"
             export DB_USERNAME="${{ secrets.DB_USERNAME }}"
             export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            
+            export NAVER_CLIENT_ID="${{ secrets.NAVER_CLIENT_ID }}"
+            export NAVER_CLIENT_SECRET="${{ secrets.NAVER_CLIENT_SECRET }}"
+            export NAVER_REDIRECT_URI="${{ secrets.NAVER_REDIRECT_URI }}"
+            
+            export KAKAO_CLIENT_ID="${{ secrets.KAKAO_CLIENT_ID }}"
+            export KAKAO_CLIENT_SECRET="${{ secrets.KAKAO_CLIENT_SECRET }}"
+            export KAKAO_REDIRECT_URI="${{ secrets.KAKAO_REDIRECT_URI }}"
+            
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export JWT_ACCESS_EXPIRATION="${{ secrets.JWT_ACCESS_EXPIRATION }}"
+            export JWT_REFRESH_EXPIRATION="${{ secrets.JWT_REFRESH_EXPIRATION }}"
+            
 
             cd /home/ubuntu/Scently
 

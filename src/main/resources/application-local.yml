@@ -12,7 +12,7 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -20,7 +20,14 @@ spring:
         highlight_sql: true
 
   logging.level:
-    # sql 출력
-    org.hibernate.SQL: debug
-    # sql 실행시 binding 되는 파라미터의 값이 ??로 뜨는데 그 값을 보여주는 옵션
-    org.hibernate.orm.jdbc.bind: trace #스프링 부트 3.x, hibernate6
+    org:
+      hibernate:
+        # sql 출력
+        SQL: debug
+        type:
+          descriptor:
+            # sql 실행시 binding 되는 파라미터의 값이 ??로 뜨는데 그 값을 보여주는 옵션
+            sql: trace
+      springframework:
+          security: DEBUG
+          security.oauth2: DEBUG

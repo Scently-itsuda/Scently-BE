@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @Entity
 @Getter
@@ -94,10 +93,10 @@ public class User {
         if (nickname != null && (!Objects.equals(this.nickname, nickname))) {
             this.nickname = nickname;
         }
-        if (gender != null && (!Objects.equals(this.gender, gender))) {
+        if (gender != null && gender != this.gender) {
             this.gender = gender;
         }
-        if (birthDate != null && (!Objects.equals(this.birthDate, birthDate))) {
+        if (birthDate != null && !this.birthDate.equals(birthDate)) {
             this.birthDate = birthDate;
         }
     }

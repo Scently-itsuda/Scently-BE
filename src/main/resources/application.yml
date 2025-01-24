@@ -27,6 +27,15 @@ spring:
               - profile_image
             client-authentication-method: client_secret_post
 
+          google:
+            client-name: Google
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            scope:
+              - email
+              - profile
+
         # 이 값들은 네이버 OAuth2 API 문서에서 제공하는 기본적인 설정이므로, 네이버 API에 맞춰 고정된 값으로 사용되며, 특별한 사유가 없다면 변경하지 않아도 된다.
         provider:
           naver:

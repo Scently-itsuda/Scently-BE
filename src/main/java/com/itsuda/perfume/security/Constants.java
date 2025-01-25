@@ -9,6 +9,7 @@ public class Constants {
             "/oauth2/authorization/kakao", "/login/oauth2/code/kakao",
             "/oauth2/authorization/naver", "/login/oauth2/code/naver",
             "/oauth2/authorization/google", "/login/oauth2/code/google",
-            "/api/auth/reissue"
+            "/api/auth/reissue",
+            "/swagger-ui/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**"
     };
 }

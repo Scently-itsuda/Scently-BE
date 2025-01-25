@@ -13,6 +13,7 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
@@ -67,8 +68,9 @@ public class JwtExceptionFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        return Arrays.stream(Constants.NO_NEED_AUTH_URLS).anyMatch(path::startsWith);
+        return Arrays.stream(Constants.NO_NEED_AUTH_URLS)
+                .anyMatch(pattern -> new AntPathMatcher().match(pattern, path));
     }
 }

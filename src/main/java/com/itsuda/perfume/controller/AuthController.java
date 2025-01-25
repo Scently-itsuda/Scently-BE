@@ -29,6 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
+    //소셜 로그인 사용자 정보 등록
+    @PatchMapping("/resister")
+    public ResponseDto<?> registerUserInfo(@Parameter(hidden = true) @UserId Long id, @RequestBody UserResisterDto requestDto) {
+        return new ResponseDto<>(authService.registerUserInfo(id, requestDto));
+    }
+
     @PostMapping("/reissue")
     public ResponseDto<JwtTokenDto> reissue(final HttpServletRequest request) {
         final String refreshToken = HeaderUtil.refineHeader(request, Constants.AUTHORIZATION_HEADER, Constants.BEARER_PREFIX)
@@ -36,11 +42,5 @@ public class AuthController {
 
         final JwtTokenDto jwtTokenDto = authService.reissue(refreshToken);
         return new ResponseDto<>(jwtTokenDto);
-    }
-
-    //소셜 로그인 사용자 정보 등록
-    @PatchMapping("/resister")
-    public ResponseDto<?> resister(@Parameter(hidden = true) @UserId Long id, @RequestBody UserResisterDto requestDto) {
-        return new ResponseDto<>(authService.registerUserInfo(id, requestDto));
     }
 }

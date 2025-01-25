@@ -90,13 +90,13 @@ public class User {
     }
 
     public void register(GenderType gender, String birthDate, String nickname) {
-        if (nickname != null && (!Objects.equals(this.nickname, nickname))) {
+        if (nickname != null) {
             this.nickname = nickname;
         }
-        if (gender != null && gender != this.gender) {
+        if (gender != null) {
             this.gender = gender;
         }
-        if (birthDate != null && !this.birthDate.equals(birthDate)) {
+        if (birthDate != null) {
             this.birthDate = birthDate;
         }
         this.role = ERole.USER;

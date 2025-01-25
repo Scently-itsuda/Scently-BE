@@ -14,6 +14,6 @@ import org.springframework.stereotype.Component;
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        response.sendRedirect("https://scently.kro.kr/failure");
+        response.sendRedirect("http://localhost:5173/failure");
     }
 }

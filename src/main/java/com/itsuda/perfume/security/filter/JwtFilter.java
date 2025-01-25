@@ -21,6 +21,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @RequiredArgsConstructor
@@ -70,7 +71,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        return Arrays.stream(Constants.NO_NEED_AUTH_URLS).anyMatch(path::startsWith);
+        return Arrays.stream(Constants.NO_NEED_AUTH_URLS)
+                .anyMatch(pattern -> new AntPathMatcher().match(pattern, path));
     }
-
 }

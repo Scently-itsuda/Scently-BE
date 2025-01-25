@@ -9,6 +9,7 @@ import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.security.Constants;
 import com.itsuda.perfume.service.AuthService;
 import com.itsuda.perfume.util.HeaderUtil;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class AuthController {
 
     //소셜 로그인 사용자 정보 등록
     @PatchMapping("/resister")
-    public ResponseDto<?> resister(@UserId Long id, @RequestBody UserResisterDto requestDto) {
+    public ResponseDto<?> resister(@Parameter(hidden = true) @UserId Long id, @RequestBody UserResisterDto requestDto) {
         return new ResponseDto<>(authService.registerUserInfo(id, requestDto));
     }
 }

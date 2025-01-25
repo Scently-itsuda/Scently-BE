@@ -25,7 +25,7 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
 
-        user.updateUserInfo(
+        user.register(
             requestDto.gender(), 
             requestDto.birthDate(), 
             requestDto.nickname()
@@ -33,6 +33,7 @@ public class AuthService {
         
         return jwtUtil.generateTokens(userId, ERole.USER);
     }
+
     @Transactional
     public JwtTokenDto reissue(final String refreshToken) {
         return jwtUtil.reissue(refreshToken);

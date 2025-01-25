@@ -89,7 +89,7 @@ public class User {
         this.role = ERole.USER;
     }
 
-    public void updateUserInfo(GenderType gender, String birthDate, String nickname) {
+    public void register(GenderType gender, String birthDate, String nickname) {
         if (nickname != null && (!Objects.equals(this.nickname, nickname))) {
             this.nickname = nickname;
         }
@@ -99,5 +99,6 @@ public class User {
         if (birthDate != null && !this.birthDate.equals(birthDate)) {
             this.birthDate = birthDate;
         }
+        this.role = ERole.USER;
     }
 } 

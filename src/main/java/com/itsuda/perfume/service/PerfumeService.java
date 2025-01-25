@@ -36,12 +36,13 @@ public class PerfumeService {
     // 향수 목록 조회
     public List<PerfumeListDto> getPerfumes(PerfumeRequestDto perfumeRequestDto) {
         return perfumeRepository.findBySearchOptions(
-            perfumeRequestDto.getPrice(),
-            perfumeRequestDto.getGender(),
-            perfumeRequestDto.getAccord(),
-            perfumeRequestDto.getPotential(),
-            perfumeRequestDto.getBrand(),
-            perfumeRequestDto.getCountry()
+            perfumeRequestDto.getMinPrice(),
+            perfumeRequestDto.getMaxPrice(),
+            perfumeRequestDto.getGenders(),
+            perfumeRequestDto.getAccords(),
+            perfumeRequestDto.getPotentials(),
+            perfumeRequestDto.getBrands(),
+            perfumeRequestDto.getCountries()
         ).stream().map(PerfumeListDto::from).toList();
     }
 

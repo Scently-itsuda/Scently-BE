@@ -11,9 +11,6 @@ public class Constants {
             "/oauth2/authorization/naver", "/login/oauth2/code/naver",
             "/oauth2/authorization/google", "/login/oauth2/code/google",
             "/api/auth/reissue",
-            "/swagger-ui/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html",
-
-            // 소셜 로그인 응답 확인을 위한 임시 URL
-            "/", "/sign-up", "/failure"
+            "/swagger-ui/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html"
     };
 }

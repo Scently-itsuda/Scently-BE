@@ -29,13 +29,15 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         JwtTokenDto jwtTokenDto = jwtUtil.generateTokens(userPrincipal.getId(), userPrincipal.getRole());
         userRepository.updateRefreshToken(userPrincipal.getId(), jwtTokenDto.getRefreshToken());
 
-        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
+        // 프론트 앱뷰 나올때까지 시큐어쿠키가 아닌 일반 쿠키 사용 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
+        CookieUtil.addCookie(response, "refreshToken", jwtTokenDto.getRefreshToken());
         CookieUtil.addCookie(response, "accessToken", jwtTokenDto.getAccessToken());
 
         if (userPrincipal.getRole() == ERole.GUEST) {
-            response.sendRedirect("https://scently.kro.kr/sign-up");
+            response.sendRedirect("http://localhost:5173/sign-up");
         } else {
-            response.sendRedirect("https://scently.kro.kr/");
+            response.sendRedirect("http://localhost:5173");
         }
     }
 }

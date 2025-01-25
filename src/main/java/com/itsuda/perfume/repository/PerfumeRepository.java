@@ -23,18 +23,20 @@ public interface PerfumeRepository extends JpaRepository<Perfume, Long> {
            "LEFT JOIN p.perfumeAccords pa " +
            "LEFT JOIN pa.accord a " +
            "WHERE " +
-           "(:price IS NULL OR pv.price <= :price) AND " +
-           "(:gender IS NULL OR p.gender = :gender) AND " +
-           "(:accord IS NULL OR a.name = :accord) AND " +
-           "(:potency IS NULL OR p.potential = :potency) AND " +
-           "(:brand IS NULL OR p.brand = :brand) AND " +
-           "(:country IS NULL OR p.country = :country)")
+           "(:minPrice IS NULL OR pv.price >= :minPrice) AND " +
+           "(:maxPrice IS NULL OR pv.price <= :maxPrice) AND " +
+           "(:genders IS NULL OR p.gender IN :genders) AND " +
+           "(:accords IS NULL OR a.name IN :accords) AND " +
+           "(:potencies IS NULL OR p.potential IN :potencies) AND " +
+           "(:brands IS NULL OR p.brand IN :brands) AND " +
+           "(:countries IS NULL OR p.country IN :countries)")
     List<Perfume> findBySearchOptions(
-        @Param("price") Integer price, 
-        @Param("gender") GenderType gender, 
-        @Param("accord") String accord, 
-        @Param("potency") PotentialType potency, 
-        @Param("brand") BrandType brand, 
-        @Param("country") CountryType country
+        @Param("minPrice") Integer minPrice, 
+        @Param("maxPrice") Integer maxPrice, 
+        @Param("genders") List<GenderType> genders, 
+        @Param("accords") List<String> accords, 
+        @Param("potencies") List<PotentialType> potencies, 
+        @Param("brands") List<BrandType> brands, 
+        @Param("countries") List<CountryType> countries
     );
 }

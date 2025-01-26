@@ -11,11 +11,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final JwtUtil jwtUtil;
@@ -27,6 +30,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
 
         JwtTokenDto jwtTokenDto = jwtUtil.generateTokens(userPrincipal.getId(), userPrincipal.getRole());
+        log.info("Generated Tokens - Access: {}, Refresh: {}", 
+        jwtTokenDto.getAccessToken().substring(0, 20), 
+        jwtTokenDto.getRefreshToken().substring(0, 20));
+        
+        // DB 업데이트 전 현재 토큰 확인
+        log.info("Previous DB Token: {}", 
+        userRepository.findById(userPrincipal.getId())
+            .map(user -> user.getRefreshToken() != null ? user.getRefreshToken().substring(0, 20) : "null")
+            .orElse("user not found"));
+
         userRepository.updateRefreshToken(userPrincipal.getId(), jwtTokenDto.getRefreshToken());
 
         // 캐시 방지 헤더 추가
@@ -40,6 +53,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 //        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
         CookieUtil.addCookie(response, "refreshToken", jwtTokenDto.getRefreshToken());
         CookieUtil.addCookie(response, "accessToken", jwtTokenDto.getAccessToken());
+
+        //
+        log.info("Response Cookies Set - Access: {}, Refresh: {}", 
+        jwtTokenDto.getAccessToken().substring(0, 20), 
+        jwtTokenDto.getRefreshToken().substring(0, 20));
 
         if (userPrincipal.getRole() == ERole.GUEST) {
             response.sendRedirect("http://localhost:5173/sign-up");

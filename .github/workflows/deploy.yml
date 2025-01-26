@@ -3,7 +3,7 @@ name: Deploy
 on:
   push:
     branches:
-      - dev
+      - fix/login_error
 
 jobs:
   Deploy:
@@ -40,7 +40,7 @@ jobs:
             cd /home/ubuntu/Scently
 
             # 기존 소스 업데이트
-            git pull origin dev
+            git pull origin fix/login_error
 
             # Gradle Clean Build
             ./gradlew clean build

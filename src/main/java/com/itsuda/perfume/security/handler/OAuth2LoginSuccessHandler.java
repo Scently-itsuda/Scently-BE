@@ -29,6 +29,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         JwtTokenDto jwtTokenDto = jwtUtil.generateTokens(userPrincipal.getId(), userPrincipal.getRole());
         userRepository.updateRefreshToken(userPrincipal.getId(), jwtTokenDto.getRefreshToken());
 
+        // 캐시 방지 헤더 추가
+        // OAuth2 인증 응답이 캐시되는 것을 방지
+        // 매 요청마다 새로운 JWT 토큰이 생성되도록 보장
+        response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        response.setHeader("Pragma", "no-cache");
+        response.setHeader("Expires", "0");
+
         // 프론트 앱뷰 나올때까지 시큐어쿠키가 아닌 일반 쿠키 사용 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
         CookieUtil.addCookie(response, "refreshToken", jwtTokenDto.getRefreshToken());

@@ -31,3 +31,12 @@ spring:
       springframework:
           security: DEBUG
           security.oauth2: DEBUG
+
+# 로컬 환경 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+  server:
+    url: http://localhost:8080  # 로컬 환경의 서버 URL

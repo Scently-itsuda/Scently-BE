@@ -31,4 +31,4 @@ springdoc:
   api-docs:
     path: /api-docs
   server:
-    url: http://localhost:8080  # 로컬 환경의 서버 URL
+    url: https://scently.kro.kr  # 배포 환경의 서버 URL

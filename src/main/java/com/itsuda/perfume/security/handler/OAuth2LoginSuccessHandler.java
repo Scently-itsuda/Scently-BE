@@ -1,5 +1,6 @@
 package com.itsuda.perfume.security.handler;
 
+import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.dto.response.JwtTokenDto;
 import com.itsuda.perfume.repository.UserRepository;

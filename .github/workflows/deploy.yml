@@ -37,7 +37,7 @@ jobs:
             export JWT_REFRESH_EXPIRATION="${{ secrets.JWT_REFRESH_EXPIRATION }}"
             
 
-            cd /home/ubuntu/Scently
+            cd /home/ubuntu/Scently-BE
 
             # 기존 소스 업데이트
             git pull origin dev

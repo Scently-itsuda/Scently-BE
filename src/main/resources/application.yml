@@ -61,6 +61,8 @@ springdoc:
   show-actuator: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+  server:
+    url: https://scently.kro.kr  # 배포 환경의 서버 URL
   
 
 jwt:

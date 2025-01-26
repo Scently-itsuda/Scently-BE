@@ -24,3 +24,11 @@ spring:
     org.hibernate.SQL: debug
     # sql 실행시 binding 되는 파라미터의 값이 ??로 뜨는데 그 값을 보여주는 옵션
     org.hibernate.orm.jdbc.bind: trace #스프링 부트 3.x, hibernate6
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+  server:
+    url: http://localhost:8080  # 로컬 환경의 서버 URL

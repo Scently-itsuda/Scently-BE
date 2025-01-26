@@ -21,6 +21,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -41,6 +45,8 @@ public class SecurityConfig {
         return httpSecurity
                 //csrf(Cross-Site Request Forgery) disable
                 .csrf(AbstractHttpConfigurer::disable)
+                // CORS 설정 추가
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 //Form 로그인 방식 disable
                 .formLogin(AbstractHttpConfigurer::disable)
                 //HTTP Basic 인증 방식 disable
@@ -87,5 +93,18 @@ public class SecurityConfig {
 
                 //SecurityFilterChain 빈을 반환
                 .getOrBuild();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("https://scently.kro.kr"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

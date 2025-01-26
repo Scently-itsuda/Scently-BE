@@ -56,7 +56,7 @@ public class JwtUtil implements InitializingBean {
     }
 
     public int getWebRefreshTokenExpirationSecond() {
-        return (int) (refreshTokenExpiredPeriod / 1000);
+        return refreshTokenExpiredPeriod;
     }
 
     public JwtTokenDto generateTokens(final Long id, final ERole role) {

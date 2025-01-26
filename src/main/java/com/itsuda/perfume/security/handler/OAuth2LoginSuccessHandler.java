@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -36,9 +37,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Expires", "0");
 
-        // 프론트 앱뷰 나올때까지 시큐어쿠키가 아닌 일반 쿠키 사용 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
-        CookieUtil.addCookie(response, "refreshToken", jwtTokenDto.getRefreshToken());
+        CookieUtil.addSecureCookie(response, "refreshToken", jwtTokenDto.getRefreshToken(), jwtUtil.getWebRefreshTokenExpirationSecond());
         CookieUtil.addCookie(response, "accessToken", jwtTokenDto.getAccessToken());
 
         if (userPrincipal.getRole() == ERole.GUEST) {

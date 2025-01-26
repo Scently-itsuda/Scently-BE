@@ -11,6 +11,7 @@ public class Constants {
             "/oauth2/authorization/naver", "/login/oauth2/code/naver",
             "/oauth2/authorization/google", "/login/oauth2/code/google",
             "/api/auth/reissue",
-            "/swagger-ui/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html"
+            "/swagger-ui/**", "/api-docs/**", "/swagger-resources/**", "/webjars/**", "/swagger-ui.html",
+            "/api/v1/**"  // 클라이언트 작업 편의를 고려해 모든 API 엔드포인트 허용
     };
 }

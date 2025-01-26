@@ -30,15 +30,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         CustomUserDetails userPrincipal = (CustomUserDetails) authentication.getPrincipal();
 
         JwtTokenDto jwtTokenDto = jwtUtil.generateTokens(userPrincipal.getId(), userPrincipal.getRole());
-        log.info("Generated Tokens - Access: {}, Refresh: {}", 
-        jwtTokenDto.getAccessToken().substring(0, 20), 
-        jwtTokenDto.getRefreshToken().substring(0, 20));
+        log.info("Generated Tokens - Access: {}", jwtTokenDto.getAccessToken());
+        log.info("Generated Tokens - Refresh: {}", jwtTokenDto.getRefreshToken());
         
         // DB 업데이트 전 현재 토큰 확인
         log.info("Previous DB Token: {}", 
-        userRepository.findById(userPrincipal.getId())
-            .map(user -> user.getRefreshToken() != null ? user.getRefreshToken().substring(0, 20) : "null")
-            .orElse("user not found"));
+            userRepository.findById(userPrincipal.getId())
+                .map(User::getRefreshToken)
+                .orElse("null"));
 
         userRepository.updateRefreshToken(userPrincipal.getId(), jwtTokenDto.getRefreshToken());
 

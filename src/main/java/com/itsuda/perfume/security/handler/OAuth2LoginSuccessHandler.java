@@ -42,9 +42,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         CookieUtil.addCookie(response, "accessToken", jwtTokenDto.getAccessToken());
 
         if (userPrincipal.getRole() == ERole.GUEST) {
-            response.sendRedirect("http://localhost:5173/sign-up");
+            response.sendRedirect("https://scently.kro.kr/swagger-ui/index.html#/");
         } else {
-            response.sendRedirect("http://localhost:5173");
+            response.sendRedirect("https://scently.kro.kr/swagger-ui/index.html#/");
         }
     }
 }

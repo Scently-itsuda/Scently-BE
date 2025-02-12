@@ -18,6 +18,10 @@ public enum ErrorCode {
     NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
     INVALID_HEADER("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 헤더입니다"),
     INVALID_DATE_FORMAT("1400", HttpStatus.BAD_REQUEST, "날짜는 yyyy-MM-dd 형식이어야 합니다"),
+    INVALID_NICKNAME_FORMAT("1400", HttpStatus.BAD_REQUEST, "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다"),
+    INVALID_NICKNAME_LENGTH("1400", HttpStatus.BAD_REQUEST, "닉네임은 2자 이상 16자 이하여야 합니다"),
+    NICKNAME_ALREADY_EXISTS("1400", HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다"),
+    NICKNAME_CONTAINS_FORBIDDEN("1400", HttpStatus.BAD_REQUEST, "사용할 수 없는 단어가 포함되어 있습니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
@@ -35,7 +39,6 @@ public enum ErrorCode {
     TOKEN_UNKNOWN_ERROR("1401", HttpStatus.UNAUTHORIZED, "알 수 없는 토큰 오류입니다"), 
     TOKEN_MALFORMED_ERROR("1401", HttpStatus.UNAUTHORIZED, "토큰 형식이 올바르지 않습니다");
     
-
     private final String code;
     private final HttpStatus httpStatus;
     private final String message;

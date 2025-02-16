@@ -1,11 +1,8 @@
 package com.itsuda.perfume.dto.request;
 
+import com.itsuda.perfume.annotation.ValidDate;
 import com.itsuda.perfume.annotation.ValidNickname;
 import com.itsuda.perfume.domain.type.GenderType;
-import com.itsuda.perfume.exception.ErrorCode;
-import com.itsuda.perfume.exception.RestApiException;
-import com.itsuda.perfume.util.ValidationUtil;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record UserResisterDto(
@@ -17,11 +14,7 @@ public record UserResisterDto(
     GenderType gender,
 
     @Schema(description = "생년월일", example = "2000-01-01", pattern = "yyyy-MM-dd")
+    @ValidDate
     String birthDate 
 ) {
-    public UserResisterDto {
-        if (!ValidationUtil.isValidDateFormat(birthDate)) {
-            throw new RestApiException(ErrorCode.INVALID_DATE_FORMAT);
-        }
-    }
 }

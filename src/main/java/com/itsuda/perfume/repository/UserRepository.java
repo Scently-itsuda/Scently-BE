@@ -24,6 +24,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "update User u set u.refreshToken = :refreshToken where u.id = :userId")
     void updateRefreshToken(@Param("userId") Long userId, @Param("refreshToken") String refreshToken);
 
+    boolean existsByNickname(String nickname);
+
     interface UserSecurityForm {
         static UserSecurityForm invoke(User user) {
             return new UserSecurityForm() {

@@ -1,5 +1,10 @@
 package com.itsuda.perfume.domain.type;
 
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
+import lombok.Getter;
+
+@Getter
 public enum PotentialType {
     EDC("오 드 코롱"),
     EDT("오 드 뚜왈렛"),
@@ -11,17 +16,13 @@ public enum PotentialType {
     PotentialType(String description) {
         this.description = description;
     }
-    
-    public String getDescription() {
-        return description;
-    }
-    
+
     public static PotentialType of(String description) {
         for (PotentialType potentialType : PotentialType.values()) {
             if (potentialType.getDescription().equals(description)) {
                 return potentialType;
             }
         }
-        throw new IllegalArgumentException();
+        throw new RestApiException(ErrorCode.INVALID_POTENTIAL_TYPE);
     }
 } 

@@ -1,5 +1,10 @@
 package com.itsuda.perfume.domain.type;
 
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
+import lombok.Getter;
+
+@Getter
 public enum GenderType {
     MALE("남성"),
     FEMALE("여성"),
@@ -11,8 +16,13 @@ public enum GenderType {
     GenderType(String description) {
         this.description = description;
     }
-    
-    public String getDescription() {
-        return description;
+
+    public static GenderType of(String gender) {
+        for (GenderType genderType : GenderType.values()) {
+            if (genderType.getDescription().equals(gender)) {
+                return genderType;
+            }
+        }
+        throw new RestApiException(ErrorCode.INVALID_GENDER_TYPE);
     }
 }

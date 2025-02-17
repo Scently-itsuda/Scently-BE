@@ -1,5 +1,10 @@
 package com.itsuda.perfume.domain.type;
 
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
+import lombok.Getter;
+
+@Getter
 public enum BrandType {
     CHANEL("샤넬"),
     DIOR("디올"),
@@ -19,16 +24,12 @@ public enum BrandType {
         this.description = description;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
     public static BrandType of(String description) {
         for (BrandType brandType : BrandType.values()) {
             if (brandType.getDescription().equals(description)) {
                 return brandType;
             }
         }
-        throw new IllegalArgumentException();
+        throw new RestApiException(ErrorCode.INVALID_BRAND_TYPE);
     }
 } 

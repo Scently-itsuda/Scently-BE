@@ -1,6 +1,5 @@
 package com.itsuda.perfume.service;
 
-import com.itsuda.perfume.domain.Accord;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.PerfumeDetail;
 import com.itsuda.perfume.domain.PerfumeVolume;
@@ -22,6 +21,8 @@ import org.springframework.stereotype.Service;
 import com.itsuda.perfume.dto.request.PerfumeRequestDto;
 import com.itsuda.perfume.dto.response.PerfumeListDto;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.domain.PerfumeAccord;
+import com.itsuda.perfume.repository.PerfumeAccordRepository;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -32,6 +33,7 @@ public class PerfumeService {
     private final AccordRepository accordRepository;
     private final PerfumeVolumeRepository perfumeVolumeRepository;
     private final PerfumeDetailRepository perfumeDetailRepository;
+    private final PerfumeAccordRepository perfumeAccordRepository;
 
     // 향수 목록 조회
     public List<PerfumeListDto> getPerfumes(PerfumeRequestDto perfumeRequestDto) {
@@ -53,17 +55,23 @@ public class PerfumeService {
 
     // 향수 상세 조회
     public PerfumeDetailDto getPerfumeDetail(Long perfumeId) {
-        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
-         List<PerfumeVolume> perfumeVolume = perfumeVolumeRepository.findByPerfume(perfume);
-         if (perfumeVolume.isEmpty()) {
-             throw new RestApiException(ErrorCode.NOT_FOUND_PERFUME_VOLUME);
-         }
-         List<Accord> accords = accordRepository.findAllByPerfume(perfume);
-         if (accords.isEmpty()) {
-             throw new RestApiException(ErrorCode.NOT_FOUND_ACCORD);
-         }
-        PerfumeDetail perfumeDetail = perfumeDetailRepository.findByPerfume(perfume).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME_DETAIL));
+        Perfume perfume = perfumeRepository.findById(perfumeId)
+            .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+        
+        List<PerfumeVolume> perfumeVolume = perfumeVolumeRepository.findByPerfume(perfume);
+        if (perfumeVolume.isEmpty()) {
+            throw new RestApiException(ErrorCode.NOT_FOUND_PERFUME_VOLUME);
+        }
 
-        return PerfumeDetailDto.from(perfume, perfumeVolume, accords, perfumeDetail);
+        // PerfumeAccord 정보를 직접 조회
+        List<PerfumeAccord> perfumeAccords = perfumeAccordRepository.findByPerfume(perfume);
+        if (perfumeAccords.isEmpty()) {
+            throw new RestApiException(ErrorCode.NOT_FOUND_ACCORD);
+        }
+        
+        PerfumeDetail perfumeDetail = perfumeDetailRepository.findByPerfume(perfume)
+            .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME_DETAIL));
+
+        return PerfumeDetailDto.from(perfume, perfumeVolume, perfumeAccords, perfumeDetail);
     }
 }

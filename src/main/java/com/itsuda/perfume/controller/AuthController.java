@@ -32,7 +32,7 @@ public class AuthController {
 
     @Operation(summary = "소셜 로그인 사용자 정보 등록", description = "소셜 로그인 후 추가 사용자 정보를 등록합니다.")
     @PatchMapping("/resister")
-    public ResponseDto<?> registerUserInfo(@Parameter Long id, @Valid @RequestBody UserResisterDto requestDto) {
+    public ResponseDto<?> registerUserInfo(@Parameter(hidden = true) @UserId Long id, @Valid @RequestBody UserResisterDto requestDto) {
         return new ResponseDto<>(authService.registerUserInfo(id, requestDto));
     }
 

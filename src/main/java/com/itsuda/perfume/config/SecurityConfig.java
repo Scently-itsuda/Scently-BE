@@ -12,6 +12,7 @@ import com.itsuda.perfume.security.handler.signout.CustomSignOutProcessHandler;
 import com.itsuda.perfume.security.handler.signout.CustomSignOutResultHandler;
 import com.itsuda.perfume.security.CustomOAuth2UserService;
 import com.itsuda.perfume.util.JwtUtil;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -95,12 +96,16 @@ public class SecurityConfig {
                 .getOrBuild();
     }
 
+    // 안드로이드 앱과의 통신에는 CORS가 필요 없지만, 개발 과정에서 Swagger UI를 통해 API를 테스트하고 문서를 확인하기 위해 CORS 설정 추가
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("https://scently.kro.kr"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "http://scently.kro.kr:8080",
+            "http://scently.kro.kr"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

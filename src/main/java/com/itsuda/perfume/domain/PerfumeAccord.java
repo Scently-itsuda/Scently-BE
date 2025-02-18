@@ -1,5 +1,6 @@
 package com.itsuda.perfume.domain;
 
+import com.itsuda.perfume.domain.type.NoteType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,6 +13,9 @@ public class PerfumeAccord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Enumerated(EnumType.STRING)
+    private NoteType noteType;
 
     // ------------------------ 관계 설정 ----------------------------
 

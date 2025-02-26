@@ -60,10 +60,6 @@ public class Ootd extends ModifiableBaseEntity {
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
-    /*
-    Todo - 좋아요 연관 관계 설정
-     */
-
     @Builder
     private Ootd(int likeCount, int commentCount, int volume, String content, List<OotdImage> ootdImages, Perfume perfume) {
         this.likeCount = likeCount;

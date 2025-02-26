@@ -49,8 +49,10 @@ public class Ootd extends ModifiableBaseEntity {
     @JoinColumn(name = "perfume_id")
     private Perfume perfume;
 
+    @OneToMany(mappedBy = "ootd")
+    private List<OotdTag> ootdTags = new ArrayList<>();
+
     /*
-    Todo - 태그 연관 관계 설정
     Todo - 댓글 연관 관계 설정
     Todo - 좋아요 연관 관계 설정
      */

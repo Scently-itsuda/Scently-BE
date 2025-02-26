@@ -2,6 +2,7 @@ package com.itsuda.perfume.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,18 +43,24 @@ public class Ootd extends ModifiableBaseEntity {
 
     // ------------------------ 관계 설정 ----------------------------
 
-    @OneToMany(mappedBy = "ootd")
+    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdImage> ootdImages = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "perfume_id")
     private Perfume perfume;
 
-    @OneToMany(mappedBy = "ootd")
+    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdTag> ootdTags = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+
     /*
-    Todo - 댓글 연관 관계 설정
     Todo - 좋아요 연관 관계 설정
      */
 

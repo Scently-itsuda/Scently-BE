@@ -47,26 +47,26 @@ public class Ootd extends ModifiableBaseEntity {
     private List<OotdImage> ootdImages = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "perfume_id")
+    @JoinColumn(name = "perfume_id", nullable = false)
     private Perfume perfume;
 
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdTag> ootdTags = new ArrayList<>();
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
     @Builder
-    private Ootd(int likeCount, int commentCount, int volume, String content, List<OotdImage> ootdImages, Perfume perfume) {
+    private Ootd(int likeCount, int commentCount, int volume, String content, Perfume perfume, User user) {
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.volume = volume;
         this.content = content;
-        this.ootdImages = ootdImages;
         this.perfume = perfume;
+        this.user = user;
     }
 }

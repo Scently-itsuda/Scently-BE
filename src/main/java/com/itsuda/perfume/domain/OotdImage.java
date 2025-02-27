@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OotdImage {
+public class OotdImage extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,9 +37,10 @@ public class OotdImage {
     private Ootd ootd;
 
     @Builder
-    private OotdImage(String originName, String saveName, int sequence) {
+    private OotdImage(String originName, String saveName, int sequence, Ootd ootd) {
         this.originName = originName;
         this.saveName = saveName;
         this.sequence = sequence;
+        this.ootd = ootd;
     }
 }

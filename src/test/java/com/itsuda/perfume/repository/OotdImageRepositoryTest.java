@@ -71,7 +71,7 @@ class OotdImageRepositoryTest {
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
 
-    @DisplayName("OOTD 게시물들의 썸네일을 최신순으로 조회한다.")
+    @DisplayName("OOTD 게시물들의 썸네일 정보를 최신순으로 가져온다.")
     @Test
     void test() {
         // given

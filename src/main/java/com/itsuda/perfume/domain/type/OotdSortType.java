@@ -6,6 +6,7 @@ import lombok.Getter;
 
 @Getter
 public enum OotdSortType {
+    NEWEST("최신순"),
     POPULAR("인기순");
 
     private final String description;

@@ -1,12 +1,21 @@
 package com.itsuda.perfume.service;
 
+import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.type.OotdSortType;
+import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,8 +26,10 @@ public class OotdService {
     private final OotdImageRepository ootdImageRepository;
 
     public OotdMainDto getOotdThumbnailsBySort(int page, int size, OotdSortType ootdSortType) {
-        // Todo 인기순 로직 개발
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
-        return null;
+        Page<OotdImage> ootdImages = ootdImageRepository.findByOotdOrderByOotdCreatedAt(pageable);
+        List<OotdThumbnailDto> ootdThumbnails = ootdImages.stream().map(OotdThumbnailDto::from).toList();
+        return new OotdMainDto(ootdThumbnails, PageInfoDto.from(ootdImages));
     }
 }

@@ -85,25 +85,24 @@ class OotdServiceTest {
     void test() {
         // given
         Ootd ootd1 = createOotd(1);
+        Ootd savedOotd1 = ootdRepository.save(ootd1);
         Ootd ootd2 = createOotd(2);
+        Ootd savedOotd2 = ootdRepository.save(ootd2);
         Ootd ootd3 = createOotd(3);
-        ootdRepository.saveAll(List.of(ootd1, ootd2, ootd3));
+        Ootd savedOotd3 = ootdRepository.save(ootd3);
 
         setMockingTime(20);
-        OotdImage ootd1Image = createOotdImage(0, ootd1);
-        OotdImage savedOotd1 = ootdImageRepository.save(ootd1Image);
+        OotdImage ootdImage1 = ootdImageRepository.save(createOotdImage(0, ootd1));
         setMockingTime(30);
-        OotdImage ootd2Image = createOotdImage(0, ootd2);
-        OotdImage savedOotd2 = ootdImageRepository.save(ootd2Image);
+        OotdImage ootdImage2 = ootdImageRepository.save(createOotdImage(0, ootd2));
         setMockingTime(0);
-        OotdImage ootd3Image = createOotdImage(0, ootd3);
-        OotdImage savedOotd3 = ootdImageRepository.save(ootd3Image);
+        OotdImage ootdImage3 = ootdImageRepository.save(createOotdImage(0, ootd3));
 
         // when
         OotdMainDto result = ootdService.getOotdThumbnailsBySort(0, 3, OotdSortType.NEWEST);
 
         // then
-        assertThat(result.ootdThumbnails()).hasSize(3)
+        assertThat(result.dataList()).hasSize(3)
                 .extracting("ootdId")
                 .containsExactly(savedOotd2.getId(), savedOotd1.getId(), savedOotd3.getId());
     }

@@ -21,6 +21,5 @@ public class OotdController {
     public ResponseDto<OotdMainDto> getOotds(@ModelAttribute OotdMainRequestDto ootdMainRequestDto) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsBySort(ootdMainRequestDto.getPage(),
                 ootdMainRequestDto.getSize(), ootdMainRequestDto.getOrder()));
-
     }
 }

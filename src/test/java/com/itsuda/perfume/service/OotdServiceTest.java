@@ -9,14 +9,13 @@ import com.itsuda.perfume.domain.type.CountryType;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
-import com.itsuda.perfume.domain.type.OotdSortType;
+import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.UserRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,15 +26,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -99,7 +93,7 @@ class OotdServiceTest {
         OotdImage ootdImage3 = ootdImageRepository.save(createOotdImage(0, ootd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsBySort(0, 3, OotdSortType.NEWEST);
+        OotdMainDto result = ootdService.getOotdThumbnailsBySort(0, 3, OotdOrderType.NEWEST);
 
         // then
         assertThat(result.dataList()).hasSize(3)

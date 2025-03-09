@@ -155,7 +155,7 @@ class OotdServiceTest {
     }
 
     private static User createTestUser() {
-        return User.builder()
+        User user = User.builder()
                 .email("test@test.com")
                 .gender(GenderType.MALE)
                 .imageUrl("test url")
@@ -166,6 +166,8 @@ class OotdServiceTest {
                 .serialId("123")
                 .username("test")
                 .build();
+        user.updateBirthDate("2000-05-02");
+        return user;
     }
 
     private static Perfume createTestPerfume() {

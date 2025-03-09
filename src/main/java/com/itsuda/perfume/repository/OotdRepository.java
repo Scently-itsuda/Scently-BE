@@ -9,6 +9,6 @@ import java.util.Optional;
 public interface OotdRepository extends JpaRepository<Ootd, Long> {
 
     @Override
-    @EntityGraph(attributePaths = {"ootdImages"})
+    @EntityGraph(attributePaths = {"ootdImages", "ootdTags"})
     Optional<Ootd> findById(Long id);
 }

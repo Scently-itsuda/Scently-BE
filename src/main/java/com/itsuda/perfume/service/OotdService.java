@@ -2,12 +2,13 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
+import com.itsuda.perfume.domain.Perfume;
+import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
-import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
@@ -19,11 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
-import static com.itsuda.perfume.exception.ErrorCode.*;
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
 
 @Service
 @RequiredArgsConstructor
@@ -43,21 +43,23 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long id) {
         Ootd ootd = ootdRepository.findById(id).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        User user = ootd.getUser();
+        Perfume perfume = ootd.getPerfume();
+
         return new OotdDetailDto(ootd.getId(),
                 ootd.getCreatedAt(),
                 ootd.getOotdImages().stream().map(image -> image.getSaveName()).toList(),
                 ootd.getLikeCount(),
                 ootd.getCommentCount(),
-                ootd.getUser().getGender().toString(),
-                25,
+                user.getGender().toString(),
+                user.getAge(LocalDate.now()),
                 ootd.getVolume(),
                 ootd.getContent(),
                 ootd.getOotdTags().stream().map(tag -> tag.getTag().getName()).toList(),
-                ootd.getPerfume().getId(),
-                ootd.getPerfume().getBrand().toString(),
-                ootd.getPerfume().getImageUri(),
-                ootd.getPerfume().getName()
-                );
-
+                perfume.getId(),
+                perfume.getBrand().toString(),
+                perfume.getImageUri(),
+                perfume.getName()
+        );
     }
 }

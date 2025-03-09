@@ -7,6 +7,8 @@ import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +19,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static com.itsuda.perfume.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +42,22 @@ public class OotdService {
     }
 
     public OotdDetailDto getOotdDetailByOotdId(Long id) {
-        return null;
+        Ootd ootd = ootdRepository.findById(id).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        return new OotdDetailDto(ootd.getId(),
+                ootd.getCreatedAt(),
+                ootd.getOotdImages().stream().map(image -> image.getSaveName()).toList(),
+                ootd.getLikeCount(),
+                ootd.getCommentCount(),
+                ootd.getUser().getGender().toString(),
+                25,
+                ootd.getVolume(),
+                ootd.getContent(),
+                ootd.getOotdTags().stream().map(tag -> tag.getTag().getName()).toList(),
+                ootd.getPerfume().getId(),
+                ootd.getPerfume().getBrand().toString(),
+                ootd.getPerfume().getImageUri(),
+                ootd.getPerfume().getName()
+                );
+
     }
 }

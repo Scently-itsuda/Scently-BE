@@ -114,14 +114,16 @@ class OotdServiceTest {
         Ootd savedOotd = ootdRepository.save(createOotd(1));
         List<OotdImage> savedOotdImages = ootdImageRepository.saveAll(
                 List.of(createOotdImage(0, savedOotd),
-                createOotdImage(1, savedOotd),
-                createOotdImage(2, savedOotd)));
+                        createOotdImage(1, savedOotd),
+                        createOotdImage(2, savedOotd)));
         entityManager.clear();
 
         // when
         OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId());
 
         // then
+        assertThat(ootdDetail).extracting("ootdId", "createdAt")
+                .contains(savedOotd.getId(), savedOotd.getCreatedAt());
         assertThat(ootdDetail.ootdIamgeUrls()).hasSize(3);
     }
 
@@ -156,7 +158,6 @@ class OotdServiceTest {
         return User.builder()
                 .email("test@test.com")
                 .gender(GenderType.MALE)
-                .id(0L)
                 .imageUrl("test url")
                 .nickname("test nickname")
                 .presentation("test")

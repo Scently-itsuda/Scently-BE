@@ -129,7 +129,6 @@ class OotdImageRepositoryTest {
         return User.builder()
                 .email("test@test.com")
                 .gender(GenderType.MALE)
-                .id(0L)
                 .imageUrl("test url")
                 .nickname("test nickname")
                 .presentation("test")

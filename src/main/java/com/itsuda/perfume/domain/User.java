@@ -3,18 +3,29 @@ package com.itsuda.perfume.domain;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "users") 
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,12 +33,13 @@ public class User {
 
     @Column(name = "social_id", nullable = false, unique = true)
     private String serialId;
-    
+
     @Column(unique = true)
     private String nickname;
 
     @Column(name = "birth_date")
     private String birthDate;
+
     @Column(name = "provider", nullable = false)
     @Enumerated(EnumType.STRING)
     private EProvider provider;
@@ -38,14 +50,14 @@ public class User {
 
     @Column(name = "image_url")
     private String imageUrl;
-    
+
     private String username;
-    
+
     @Column(unique = true)
     private String email;
-    
+
     private String presentation;
-    
+
     @Enumerated(EnumType.STRING)
     private GenderType gender;
 
@@ -53,10 +65,10 @@ public class User {
     private String refreshToken;
 
     // ------------------------ 관계 설정 ----------------------------
-    
+
     @OneToMany(mappedBy = "user")
     private List<Review> reviews = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "customer")
     private List<WishPerfume> wishPerfumes = new ArrayList<>();
 
@@ -65,11 +77,10 @@ public class User {
 
 
     @Builder
-    public User(String email, GenderType gender, Long id, String imageUrl, String nickname, String presentation,
+    public User(String email, GenderType gender, String imageUrl, String nickname, String presentation,
                 EProvider provider, ERole role, String serialId, String username) {
         this.email = email;
         this.gender = gender;
-        this.id = id;
         this.imageUrl = imageUrl;
         this.nickname = nickname;
         this.presentation = presentation;
@@ -99,5 +110,14 @@ public class User {
             this.birthDate = birthDate;
         }
         this.role = ERole.USER;
+    }
+
+    public int getAge(LocalDate time) {
+        LocalDate userLocalDate = LocalDate.parse(birthDate);
+        return Math.abs((int)ChronoUnit.YEARS.between(userLocalDate, time));
+    }
+
+    public void updateBirthDate(String birthDate) {
+        this.birthDate = birthDate;
     }
 } 

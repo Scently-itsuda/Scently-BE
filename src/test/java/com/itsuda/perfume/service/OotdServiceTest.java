@@ -82,7 +82,7 @@ class OotdServiceTest {
 
     @DisplayName("OOTD 게시물들의 썸네일의 정보를 최신순으로 조회한다.")
     @Test
-    void test() {
+    void getOotdThumbnailsSortedByNewest() {
         // given
         Ootd ootd1 = createOotd(1);
         Ootd savedOotd1 = ootdRepository.save(ootd1);

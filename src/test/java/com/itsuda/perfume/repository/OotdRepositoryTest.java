@@ -66,7 +66,7 @@ class OotdRepositoryTest {
 
     @DisplayName("OOTD 게시글 특정 번호에 해당하는 하나의 게시글과 사진들의 정보를 가져온다.")
     @Test
-    void test() {
+    void getOotdDetailAndImagesByOotdId() {
         // when
         Ootd findOotd = ootdRepository.findById(ootd.getId()).get();
         List<OotdImage> ootdImages = findOotd.getOotdImages();

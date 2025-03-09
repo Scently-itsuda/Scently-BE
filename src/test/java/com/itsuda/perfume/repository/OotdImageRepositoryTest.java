@@ -13,7 +13,6 @@ import com.itsuda.perfume.domain.type.PotentialType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,8 +31,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 
 
 @Transactional
@@ -73,7 +72,7 @@ class OotdImageRepositoryTest {
 
     @DisplayName("OOTD 게시물들의 썸네일 정보를 최신순으로 가져온다.")
     @Test
-    void test() {
+    void getOotdThumbnailsSortedByNewest() {
         // given
         Ootd ootd1 = createOotd(1);
         Ootd ootd2 = createOotd(2);

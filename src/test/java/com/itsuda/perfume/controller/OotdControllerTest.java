@@ -12,8 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,7 +31,7 @@ class OotdControllerTest {
         // given
         OotdMainDto result = new OotdMainDto(null, null);
 
-        Mockito.when(ootdService.getOotdThumbnailsBySort(0, 0, OotdOrderType.NEWEST)).thenReturn(result);
+        Mockito.when(ootdService.getOotdThumbnailsByOrderType(0, 0, OotdOrderType.NEWEST)).thenReturn(result);
 
         // when // then
         mockMvc.perform(

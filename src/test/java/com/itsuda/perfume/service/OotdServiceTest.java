@@ -11,11 +11,13 @@ import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
+import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -60,6 +63,9 @@ class OotdServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     private Perfume perfume;
 
@@ -93,12 +99,30 @@ class OotdServiceTest {
         OotdImage ootdImage3 = ootdImageRepository.save(createOotdImage(0, ootd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsBySort(0, 3, OotdOrderType.NEWEST);
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST);
 
         // then
         assertThat(result.dataList()).hasSize(3)
                 .extracting("ootdId")
                 .containsExactly(savedOotd2.getId(), savedOotd1.getId(), savedOotd3.getId());
+    }
+
+    @DisplayName("OOTD 게시글 아이디에 해당하는 OOTD 게시글의 정보와 이미지들을 조회한다.")
+    @Test
+    void getOotdPostAndImages() {
+        // given
+        Ootd savedOotd = ootdRepository.save(createOotd(1));
+        List<OotdImage> savedOotdImages = ootdImageRepository.saveAll(
+                List.of(createOotdImage(0, savedOotd),
+                createOotdImage(1, savedOotd),
+                createOotdImage(2, savedOotd)));
+        entityManager.clear();
+
+        // when
+        OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId());
+
+        // then
+        assertThat(ootdDetail.ootdIamgeUrls()).hasSize(3);
     }
 
     private void setMockingTime(int minute) {

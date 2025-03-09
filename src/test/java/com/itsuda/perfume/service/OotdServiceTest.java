@@ -124,7 +124,7 @@ class OotdServiceTest {
         // then
         assertThat(ootdDetail).extracting("ootdId", "createdAt")
                 .contains(savedOotd.getId(), savedOotd.getCreatedAt());
-        assertThat(ootdDetail.ootdIamgeUrls()).hasSize(3);
+        assertThat(ootdDetail.ootdInfo().ootdIamgeUrls()).hasSize(3);
     }
 
     private void setMockingTime(int minute) {

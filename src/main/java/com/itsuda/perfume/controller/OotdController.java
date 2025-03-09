@@ -1,12 +1,14 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.dto.request.ootd.OotdMainRequestDto;
+import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.OotdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,8 +20,13 @@ public class OotdController {
     private final OotdService ootdService;
 
     @GetMapping
-    public ResponseDto<OotdMainDto> getOotds(@ModelAttribute OotdMainRequestDto ootdMainRequestDto) {
+    public ResponseDto<OotdMainDto> getOotdThumbnails(@ModelAttribute OotdMainRequestDto ootdMainRequestDto) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(ootdMainRequestDto.getPage(),
                 ootdMainRequestDto.getSize(), ootdMainRequestDto.getOrder()));
+    }
+
+    @GetMapping("/{ootdId}")
+    public ResponseDto<OotdDetailDto> getOotdDetailByOotdID(@PathVariable Long ootdId) {
+        return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId));
     }
 }

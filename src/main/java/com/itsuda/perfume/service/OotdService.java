@@ -43,23 +43,7 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long id) {
         Ootd ootd = ootdRepository.findById(id).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
-        User user = ootd.getUser();
-        Perfume perfume = ootd.getPerfume();
 
-        return new OotdDetailDto(ootd.getId(),
-                ootd.getCreatedAt(),
-                ootd.getOotdImages().stream().map(image -> image.getSaveName()).toList(),
-                ootd.getLikeCount(),
-                ootd.getCommentCount(),
-                user.getGender().toString(),
-                user.getAge(LocalDate.now()),
-                ootd.getVolume(),
-                ootd.getContent(),
-                ootd.getOotdTags().stream().map(tag -> tag.getTag().getName()).toList(),
-                perfume.getId(),
-                perfume.getBrand().toString(),
-                perfume.getImageUri(),
-                perfume.getName()
-        );
+        return OotdDetailDto.from(ootd, ootd.getUser(), ootd.getPerfume());
     }
 }

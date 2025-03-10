@@ -22,7 +22,7 @@ public class OotdController {
     @GetMapping
     public ResponseDto<OotdMainDto> getOotdThumbnails(@ModelAttribute OotdMainRequestDto ootdMainRequestDto) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(ootdMainRequestDto.getPage(),
-                ootdMainRequestDto.getSize(), ootdMainRequestDto.getOrder()));
+                ootdMainRequestDto.getSize(), ootdMainRequestDto.getOrder(), 0L));
     }
 
     @GetMapping("/{ootdId}")

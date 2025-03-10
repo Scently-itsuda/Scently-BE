@@ -1,15 +1,17 @@
 package com.itsuda.perfume.dto.response.ootd;
 
-import com.itsuda.perfume.domain.OotdImage;
+import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 
 public record OotdThumbnailDto(
         Long ootdId,
-        String ootdImageUrl
+        String ootdImageUrl,
+        Boolean isLiked
 ) {
-    public static OotdThumbnailDto from(OotdImage ootdImage) {
+    public static OotdThumbnailDto from(OotdThumbnailInfo ootdThumbnailInfo) {
         return new OotdThumbnailDto(
-                ootdImage.getOotd().getId(),
-                ootdImage.getSaveName()
+                ootdThumbnailInfo.getOotdId(),
+                ootdThumbnailInfo.getOotdImageUrl(),
+                ootdThumbnailInfo.getIsLiked() == 1
         );
     }
 }

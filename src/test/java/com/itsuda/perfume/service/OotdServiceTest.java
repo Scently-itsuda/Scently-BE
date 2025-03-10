@@ -35,7 +35,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 
@@ -84,22 +84,20 @@ class OotdServiceTest {
     @Test
     void getOotdThumbnailsSortedByNewest() {
         // given
-        Ootd ootd1 = createOotd(1);
-        Ootd savedOotd1 = ootdRepository.save(ootd1);
-        Ootd ootd2 = createOotd(2);
-        Ootd savedOotd2 = ootdRepository.save(ootd2);
-        Ootd ootd3 = createOotd(3);
-        Ootd savedOotd3 = ootdRepository.save(ootd3);
-
         setMockingTime(20);
-        OotdImage ootdImage1 = ootdImageRepository.save(createOotdImage(0, ootd1));
+        Ootd savedOotd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
         setMockingTime(30);
-        OotdImage ootdImage2 = ootdImageRepository.save(createOotdImage(0, ootd2));
+        Ootd savedOotd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
         setMockingTime(0);
-        OotdImage ootdImage3 = ootdImageRepository.save(createOotdImage(0, ootd3));
+        Ootd savedOotd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST);
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -122,7 +120,7 @@ class OotdServiceTest {
         OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId());
 
         // then
-        assertThat(ootdDetail).extracting("ootdId", "createdAt")
+        assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")
                 .contains(savedOotd.getId(), savedOotd.getCreatedAt());
         assertThat(ootdDetail.ootdInfo().ootdIamgeUrls()).hasSize(3);
     }

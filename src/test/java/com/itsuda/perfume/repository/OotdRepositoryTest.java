@@ -10,23 +10,43 @@ import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.PotentialType;
+import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.data.auditing.AuditingHandler;
+import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
+import static org.mockito.BDDMockito.given;
 
 
 @Transactional
 @SpringBootTest
 class OotdRepositoryTest {
+
+    @MockBean
+    private DateTimeProvider dateTimeProvider;
+
+    @SpyBean
+    private AuditingHandler auditingHandler;
 
     @Autowired
     private OotdImageRepository ootdImageRepository;
@@ -40,16 +60,11 @@ class OotdRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private EntityManager entityManager;
-
     private Perfume perfume;
 
     private User user;
 
     private Ootd ootd;
-
-    private List<OotdImage> ootdImages;
 
     @BeforeEach
     void setUp() {
@@ -57,11 +72,44 @@ class OotdRepositoryTest {
         perfumeRepository.save(perfume);
         user = userRepository.save(createTestUser());
         ootd = ootdRepository.save(createOotd(1));
-        List<OotdImage> ootdImages = ootdImageRepository.saveAll(
-                List.of(createOotdImage(0, ootd),
-                        createOotdImage(1, ootd),
-                        createOotdImage(2, ootd)));
-        entityManager.clear();
+        ootdImageRepository.saveAll(List.of(createOotdImage(0, ootd),
+                createOotdImage(1, ootd),
+                createOotdImage(2, ootd)));
+        MockitoAnnotations.openMocks(this);
+        auditingHandler.setDateTimeProvider(dateTimeProvider);
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일 정보를 최신순으로 가져온다.")
+    @Test
+    void getOotdThumbnailsSortedByNewest() {
+        // given
+        setMockingTime(20);
+        Ootd ootd1 = createOotd(1);
+        ootdRepository.save(ootd1);
+        OotdImage ootd1Image = ootdImageRepository.save(createOotdImage(0, ootd1));
+
+        setMockingTime(30);
+        Ootd ootd2 = createOotd(2);
+        ootdRepository.save(ootd2);
+        OotdImage ootd2Image = ootdImageRepository.save(createOotdImage(0, ootd2));
+
+        setMockingTime(0);
+        Ootd ootd3 = createOotd(3);
+        ootdRepository.save(ootd3);
+        OotdImage ootd3Image = ootdImageRepository.save(createOotdImage(0, ootd3));
+
+        // when
+        Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findByOotdOrderByOotdCreatedAt(pageable, user.getId());
+
+        // then
+        assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
+                .extracting(OotdThumbnailInfo::getOotdId, OotdThumbnailInfo::getOotdImageUrl)
+                .containsExactly(
+                        tuple(ootd2.getId(), ootd2Image.getSaveName()),
+                        tuple(ootd1.getId(), ootd1Image.getSaveName()),
+                        tuple(ootd3.getId(), ootd3Image.getSaveName())
+                );
     }
 
     @DisplayName("OOTD 게시글 특정 번호에 해당하는 하나의 게시글과 사진들의 정보를 가져온다.")
@@ -74,6 +122,13 @@ class OotdRepositoryTest {
         // then
         assertThat(findOotd.getId()).isEqualTo(ootd.getId());
         assertThat(ootdImages).containsExactlyElementsOf(ootdImages);
+    }
+
+    private void setMockingTime(int minute) {
+        given(dateTimeProvider.getNow())
+                .willReturn(Optional.of(
+                        LocalDateTime.of(2025, 2, 1, 12, minute, 0)
+                ));
     }
 
     private static OotdImage createOotdImage(int sequence, Ootd ootd) {

@@ -56,7 +56,7 @@ class OotdControllerTest {
         // given
         OotdDetailDto result = new OotdDetailDto(null, null, null);
 
-        Mockito.when(ootdService.getOotdDetailByOotdId(anyLong())).thenReturn(result);
+        Mockito.when(ootdService.getOotdDetailByOotdId(anyLong(), anyLong())).thenReturn(result);
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/ootds/1"))

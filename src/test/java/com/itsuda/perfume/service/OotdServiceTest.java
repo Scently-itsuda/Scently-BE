@@ -117,7 +117,7 @@ class OotdServiceTest {
         entityManager.clear();
 
         // when
-        OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId());
+        OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId(), user.getId());
 
         // then
         assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")

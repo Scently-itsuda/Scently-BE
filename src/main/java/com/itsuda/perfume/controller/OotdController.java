@@ -27,6 +27,6 @@ public class OotdController {
 
     @GetMapping("/{ootdId}")
     public ResponseDto<OotdDetailDto> getOotdDetailByOotdID(@PathVariable Long ootdId) {
-        return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId));
+        return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId, 0L));
     }
 }

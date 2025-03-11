@@ -14,10 +14,11 @@ public record OotdInfoDto(
         int commentCount,
         int volume,
         String content,
-        List<String> tags
+        List<String> tags,
+        Boolean isLiked
 ) {
 
-    public static OotdInfoDto from(Ootd ootd) {
+    public static OotdInfoDto from(Ootd ootd, Boolean isLiked) {
         return new OotdInfoDto(
                 ootd.getId(),
                 ootd.getCreatedAt(),
@@ -26,7 +27,8 @@ public record OotdInfoDto(
                 ootd.getCommentCount(),
                 ootd.getVolume(),
                 ootd.getContent(),
-                ootd.getOotdTags().stream().map(ootdTag -> ootdTag.getTag().getName()).toList()
+                ootd.getOotdTags().stream().map(ootdTag -> ootdTag.getTag().getName()).toList(),
+                isLiked
         );
     }
 }

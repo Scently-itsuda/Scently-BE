@@ -10,7 +10,7 @@ public record OotdDetailDto(
         PerfumeInfoDto perfumeInfoDto
 ) {
 
-    public static OotdDetailDto from(Ootd ootd, User user, Perfume perfume) {
-        return new OotdDetailDto(OotdInfoDto.from(ootd), UserInfoDto.from(user), PerfumeInfoDto.from(perfume));
+    public static OotdDetailDto from(Ootd ootd, User user, Perfume perfume, Boolean isLiked) {
+        return new OotdDetailDto(OotdInfoDto.from(ootd, isLiked), UserInfoDto.from(user), PerfumeInfoDto.from(perfume));
     }
 }

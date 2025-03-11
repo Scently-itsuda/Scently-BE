@@ -4,6 +4,7 @@ import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.BrandType;
 import com.itsuda.perfume.domain.type.CountryType;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -40,6 +42,7 @@ import static org.mockito.BDDMockito.given;
 
 @Transactional
 @SpringBootTest
+@ActiveProfiles("test")
 class OotdRepositoryTest {
 
     @MockBean
@@ -55,26 +58,26 @@ class OotdRepositoryTest {
     private OotdRepository ootdRepository;
 
     @Autowired
+    private UserLikeOotdRepository userLikeOotdRepository;
+
+    @Autowired
     private PerfumeRepository perfumeRepository;
 
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EntityManager em;
+
     private Perfume perfume;
 
     private User user;
-
-    private Ootd ootd;
 
     @BeforeEach
     void setUp() {
         perfume = createTestPerfume();
         perfumeRepository.save(perfume);
         user = userRepository.save(createTestUser());
-        ootd = ootdRepository.save(createOotd(1));
-        ootdImageRepository.saveAll(List.of(createOotdImage(0, ootd),
-                createOotdImage(1, ootd),
-                createOotdImage(2, ootd)));
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
@@ -112,9 +115,44 @@ class OotdRepositoryTest {
                 );
     }
 
+    @DisplayName("OOTD 게시물 중 사용자가 좋아요를 누른 게시물의 정보도 불러온다.")
+    @Test
+    void getOotdThumbnailsIncludingUserLiked() {
+        // given
+        Ootd ootd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, ootd1));
+
+        Ootd ootd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, ootd2));
+
+        Ootd ootd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, ootd3));
+
+        userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd1).user(user).build());
+        userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd3).user(user).build());
+
+        // when
+        Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findByOotdOrderByOotdCreatedAt(pageable, user.getId());
+
+        // then
+        assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
+                .extracting(OotdThumbnailInfo::getIsLiked)
+                .containsExactly(1, 0, 1);
+    }
+
     @DisplayName("OOTD 게시글 특정 번호에 해당하는 하나의 게시글과 사진들의 정보를 가져온다.")
     @Test
     void getOotdDetailAndImagesByOotdId() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(1));
+        ootdImageRepository.saveAll(List.of(createOotdImage(0, ootd),
+                createOotdImage(1, ootd),
+                createOotdImage(2, ootd)));
+
+        em.flush();
+        em.clear();
+
         // when
         Ootd findOotd = ootdRepository.findById(ootd.getId()).get();
         List<OotdImage> ootdImages = findOotd.getOotdImages();

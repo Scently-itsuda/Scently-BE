@@ -65,7 +65,7 @@ class OotdServiceTest {
     private UserRepository userRepository;
 
     @Autowired
-    private EntityManager entityManager;
+    private EntityManager em;
 
     private Perfume perfume;
 
@@ -110,11 +110,11 @@ class OotdServiceTest {
     void getOotdPostAndImages() {
         // given
         Ootd savedOotd = ootdRepository.save(createOotd(1));
-        List<OotdImage> savedOotdImages = ootdImageRepository.saveAll(
-                List.of(createOotdImage(0, savedOotd),
+        ootdImageRepository.saveAll(List.of(createOotdImage(0, savedOotd),
                         createOotdImage(1, savedOotd),
                         createOotdImage(2, savedOotd)));
-        entityManager.clear();
+        em.flush();
+        em.clear();
 
         // when
         OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId(), user.getId());
@@ -122,7 +122,7 @@ class OotdServiceTest {
         // then
         assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")
                 .contains(savedOotd.getId(), savedOotd.getCreatedAt());
-        assertThat(ootdDetail.ootdInfo().ootdIamgeUrls()).hasSize(3);
+        assertThat(ootdDetail.ootdInfo().ootdImageUrls()).hasSize(3);
     }
 
     private void setMockingTime(int minute) {

@@ -9,7 +9,7 @@ import java.util.List;
 public record OotdInfoDto(
         Long ootdId,
         LocalDateTime createdAt,
-        List<String> ootdIamgeUrls,
+        List<String> ootdImageUrls,
         int likeCount,
         int commentCount,
         int volume,

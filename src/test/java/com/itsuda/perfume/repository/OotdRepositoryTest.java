@@ -103,7 +103,7 @@ class OotdRepositoryTest {
 
         // when
         Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findByOotdOrderByOotdCreatedAt(pageable, user.getId());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, user.getId());
 
         // then
         assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
@@ -133,7 +133,7 @@ class OotdRepositoryTest {
 
         // when
         Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findByOotdOrderByOotdCreatedAt(pageable, user.getId());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, user.getId());
 
         // then
         assertThat(ootdThumbnailInfos.getContent()).hasSize(3)

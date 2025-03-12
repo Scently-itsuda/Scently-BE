@@ -20,7 +20,7 @@ public interface OotdRepository extends JpaRepository<Ootd, Long> {
             "LEFT JOIN ootd_image oi ON oi.sequence = 0 AND oi.ootd_id = o.id " +
             "LEFT JOIN user_like_ootd ulo ON ulo.user_id = :userId AND ulo.ootd_id = o.id ",
             nativeQuery = true)
-    Page<OotdThumbnailInfo> findByOotdOrderByOotdCreatedAt(Pageable pageable, Long userId);
+    Page<OotdThumbnailInfo> findAllIncludingUserLiked(Pageable pageable, Long userId);
 
     interface OotdThumbnailInfo {
         Long getOotdId();

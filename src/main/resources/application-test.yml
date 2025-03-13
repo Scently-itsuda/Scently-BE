@@ -1,0 +1,41 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:scently
+    username: sa
+    password:
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+
+  logging.level:
+    org:
+      hibernate:
+        # sql 출력
+        SQL: debug
+        type:
+          descriptor:
+            # sql 실행시 binding 되는 파라미터의 값이 ??로 뜨는데 그 값을 보여주는 옵션
+            sql: trace
+      springframework:
+          security: DEBUG
+          security.oauth2: DEBUG
+
+# 로컬 환경 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+  server:
+    url: http://localhost:8080  # 로컬 환경의 서버 URL

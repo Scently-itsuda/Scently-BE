@@ -13,6 +13,7 @@ public enum ErrorCode {
     NOT_FOUND_PERFUME_VOLUME("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향수 용량입니다"),
     NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
+    NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다."),
 
     // Bad Request Error
     NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
@@ -28,6 +29,7 @@ public enum ErrorCode {
     INVALID_BRAND_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 브랜드 타입입니다"),
     INVALID_COUNTRY_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 국가 타입입니다"),
     INVALID_GENDER_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 성별 타입입니다"),
+    INVALID_OOTD_SORT_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 정렬 타입입니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),

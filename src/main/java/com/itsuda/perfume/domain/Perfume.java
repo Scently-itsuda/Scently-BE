@@ -2,6 +2,7 @@ package com.itsuda.perfume.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
@@ -58,5 +59,18 @@ public class Perfume {
     
     @OneToMany(mappedBy = "perfume")
     private List<PerfumeDetail> details = new ArrayList<>();
+
+    @Builder
+    private Perfume(String name, String imageUri, GenderType gender, BrandType brand, CountryType country,
+                   PotentialType potential, String description, LocalDate registeredAt) {
+        this.name = name;
+        this.imageUri = imageUri;
+        this.gender = gender;
+        this.brand = brand;
+        this.country = country;
+        this.potential = potential;
+        this.description = description;
+        this.registeredAt = registeredAt;
+    }
 }
 

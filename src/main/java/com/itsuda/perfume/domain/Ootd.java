@@ -69,4 +69,12 @@ public class Ootd extends ModifiableBaseEntity {
         this.perfume = perfume;
         this.user = user;
     }
+
+    public int increaseLikeCount() {
+        return ++this.likeCount;
+    }
+
+    public int decreaseLikeCount() {
+        return --this.likeCount;
+    }
 }

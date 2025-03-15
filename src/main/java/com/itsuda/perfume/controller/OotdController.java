@@ -2,6 +2,7 @@ package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
+import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.OotdService;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,5 +36,11 @@ public class OotdController {
     @GetMapping("/{ootdId}")
     public ResponseDto<OotdDetailDto> getOotdDetailByOotdID(@PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId, 0L));
+    }
+
+    @Operation(summary = "OOTD 게시글 좋아요 오청", description = "OOTD 게시글에 좋아요를 요청합니다.")
+    @PostMapping("/{ootdId}")
+    public ResponseDto<OotdLikeDto> likeOotdByOotdId(@PathVariable Long ootdId) {
+        return new ResponseDto<>(ootdService.sendLikeToOotd(ootdId, 0L));
     }
 }

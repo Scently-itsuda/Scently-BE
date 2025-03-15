@@ -6,6 +6,7 @@ import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
+import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
@@ -56,7 +57,7 @@ public class OotdService {
 
     // 추후 처리율 제한과 비동기 처리 예정
     @Transactional
-    public Long sendLikeToOotd(Long ootdId, Long userId) {
+    public OotdLikeDto sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
@@ -64,11 +65,11 @@ public class OotdService {
         if (userLikeOotd.isPresent()) {
             userLikeOotdRepository.delete(userLikeOotd.get());
             ootd.decreaseLikeCount();
-            return ootd.getId();
+            return new OotdLikeDto(ootd.getId(), false);
         }
 
         userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
         ootd.increaseLikeCount();
-        return ootd.getId();
+        return new OotdLikeDto(ootd.getId(), true);
     }
 }

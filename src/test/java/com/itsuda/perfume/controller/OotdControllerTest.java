@@ -2,11 +2,13 @@ package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
+import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.service.OotdService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springdoc.core.properties.SwaggerUiConfigProperties.Csrf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,6 +63,20 @@ class OotdControllerTest {
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/ootds/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("OOTD 게시글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void test() throws Exception {
+        // given
+        OotdLikeDto result = new OotdLikeDto(null, null);
+
+        Mockito.when(ootdService.sendLikeToOotd(anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

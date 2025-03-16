@@ -42,6 +42,10 @@ public class Comment extends ModifiableBaseEntity {
     @JoinColumn(name = "ootd_id")
     private Ootd ootd;
 
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+
     @Builder
     public Comment(String content, int likeCount, Comment parentComment, List<Comment> childComments) {
         this.content = content;

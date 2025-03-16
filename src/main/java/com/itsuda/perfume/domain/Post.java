@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
@@ -55,4 +56,14 @@ public class Post extends ModifiableBaseEntity {
 
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
+
+    @Builder
+    private Post(String title, String content, User user) {
+        this.title = title;
+        this.content = content;
+        this.user = user;
+        this.viewCount = 0L;
+        this.likeCount = 0;
+        this.commentCount = 0;
+    }
 }

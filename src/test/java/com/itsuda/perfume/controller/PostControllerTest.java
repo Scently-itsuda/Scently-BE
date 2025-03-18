@@ -1,6 +1,7 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.service.PostService;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,7 +32,7 @@ class PostControllerTest {
 
     @DisplayName("자유게시판의 게시글 목록들을 조회한다.")
     @Test
-    void test() throws Exception {
+    void getPosts() throws Exception {
         // given
         PostMainDto result = new PostMainDto(null, null);
         Mockito.when(postService.getPostsByOrderType(anyInt(), anyInt(), any(PostOrderType.class)))
@@ -42,6 +44,20 @@ class PostControllerTest {
                                 .queryParam("page", "0")
                                 .queryParam("size", "3")
                 ).andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+
+    }
+
+    @DisplayName("자유게시판의 게시글 ID를 기반으로 게시글을 상세 조회한다.")
+    @Test
+    void getPostDetail() throws Exception {
+        // given
+        PostDetailDto result = new PostDetailDto(null, null);
+        Mockito.when(postService.getPostDetailByPostId(anyLong())).thenReturn(result);
+
+        // when  // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/1"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
 
     }

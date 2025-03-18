@@ -1,10 +1,16 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Post;
+import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
+import com.itsuda.perfume.dto.response.post.PostDetailDto;
+import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
+import com.itsuda.perfume.dto.response.post.UserInfoDto;
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,7 +34,14 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Post> posts = postRepository.findAll(pageable);
-        List<PostInfoDto> postInfoDtos = posts.stream().map(PostInfoDto::from).toList();
-        return new PostMainDto(postInfoDtos, PageInfoDto.from(posts));
+        List<PostDto> postDtos = posts.stream().map(PostDto::from).toList();
+        return new PostMainDto(postDtos, PageInfoDto.from(posts));
+    }
+
+    public PostDetailDto getPostDetailByPostId(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUNT_POST));
+        User user = post.getUser();
+
+        return new PostDetailDto(PostInfoDto.from(post), UserInfoDto.from(user));
     }
 }

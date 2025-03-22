@@ -1,15 +1,19 @@
 package com.itsuda.perfume.service;
 
+import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.response.post.CommentInfoDto;
+import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
+import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -27,6 +31,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +55,9 @@ class PostServiceTest {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
     @Autowired
     private PostService postService;
@@ -138,6 +146,53 @@ class PostServiceTest {
                 .extracting("errorCode").isEqualTo(ErrorCode.NOT_FOUNT_POST);
     }
 
+    @DisplayName("자유게시판의 게시글에 달린 댓글들을 모두 조회한다.")
+    @Test
+    void getAllCommentOfPost() {
+        // given
+        Post post = postRepository.save(createPost(1, user));
+        Comment comment1 = commentRepository.save(createComment(1, null, post, user));
+        Comment comment2 = commentRepository.save(createComment(2, null, post, user));
+        commentRepository.save(createComment(3, comment1, post, user));
+        commentRepository.save(createComment(4, comment1, post, user));
+        commentRepository.save(createComment(5, comment2, post, user));
+
+        em.flush();
+        em.clear();
+
+        // when
+        CommentsDto result = postService.getCommentsByPostId(post.getId());
+
+        // then
+        assertThat(result.commentInfos()).extracting("content")
+                .containsExactly(comment1.getContent(), comment2.getContent());
+        assertThat(result.commentInfos()).extracting(commentInfo -> commentInfo.childCommentInfos().size())
+                .containsExactly(2, 1);
+    }
+
+    @DisplayName("자유게시판에 달린 댓글들의 총 개수와 개별 대댓글의 개수가 조회된다.")
+    @Test
+    void getCommentCount() {
+        // given
+        Post post = postRepository.save(createPost(1, user));
+        Comment comment1 = commentRepository.save(createComment(1, null, post, user));
+        Comment comment2 = commentRepository.save(createComment(2, null, post, user));
+        Comment comment1Child1 = commentRepository.save(createComment(3, comment1, post, user));
+        Comment comment1Child2 = commentRepository.save(createComment(4, comment1, post, user));
+        Comment comment2Child1 = commentRepository.save(createComment(5, comment2, post, user));
+
+        em.flush();
+        em.clear();
+
+        // when
+        CommentsDto result = postService.getCommentsByPostId(post.getId());
+
+        // then
+        assertThat(result.totalCommentCount()).isEqualTo(5);
+        assertThat(result.commentInfos()).extracting(CommentInfoDto::commentCount)
+                .containsExactly(2, 1);
+    }
+
     private void setMockingTime(int minute) {
         given(dateTimeProvider.getNow())
                 .willReturn(Optional.of(
@@ -165,6 +220,16 @@ class PostServiceTest {
         return Post.builder()
                 .title("test title" + number)
                 .content("test content" + number)
+                .user(user)
+                .build();
+    }
+
+    private static Comment createComment(int number, Comment parent, Post post, User user) {
+        return Comment.builder()
+                .content("test content" + number)
+                .likeCount(number)
+                .parentComment(parent)
+                .post(post)
                 .user(user)
                 .build();
     }

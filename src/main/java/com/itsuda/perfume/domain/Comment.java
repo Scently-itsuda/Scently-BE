@@ -38,15 +38,20 @@ public class Comment extends ModifiableBaseEntity {
     @OneToMany(mappedBy = "parentComment", fetch = FetchType.LAZY)
     private List<Comment> childComments;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Builder
-    private Comment(String content, int likeCount, Comment parentComment, Post post) {
+    private Comment(String content, int likeCount, Comment parentComment, Post post, User user) {
         this.content = content;
         this.likeCount = likeCount;
         this.parentComment = parentComment;
         this.post = post;
+        this.user = user;
     }
 }

@@ -32,10 +32,6 @@ public class Ootd extends ModifiableBaseEntity {
     private int likeCount;
 
     @Column(nullable = false)
-    @ColumnDefault("0")
-    private int commentCount;
-
-    @Column(nullable = false)
     private int volume;
 
     @Column(nullable = false)
@@ -57,13 +53,9 @@ public class Ootd extends ModifiableBaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
-    private List<Comment> comments = new ArrayList<>();
-
     @Builder
-    private Ootd(int likeCount, int commentCount, int volume, String content, Perfume perfume, User user) {
+    private Ootd(int likeCount, int volume, String content, Perfume perfume, User user) {
         this.likeCount = likeCount;
-        this.commentCount = commentCount;
         this.volume = volume;
         this.content = content;
         this.perfume = perfume;

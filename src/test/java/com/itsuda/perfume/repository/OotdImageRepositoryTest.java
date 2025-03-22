@@ -117,7 +117,6 @@ class OotdImageRepositoryTest {
     private Ootd createOotd(int number) {
         return Ootd.builder()
                 .likeCount(number)
-                .commentCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .perfume(perfume)

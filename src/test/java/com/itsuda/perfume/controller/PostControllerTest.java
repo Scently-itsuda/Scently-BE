@@ -1,6 +1,7 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.service.PostService;
@@ -60,5 +61,18 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
 
+    }
+
+    @DisplayName("자유게시판의 게시글 ID에 달린 댓글을 조회한다.")
+    @Test
+    void getComments() throws Exception {
+        // given
+        CommentsDto result = new CommentsDto(null, 0);
+        Mockito.when(postService.getCommentsByPostId(anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/1/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
     }
 }

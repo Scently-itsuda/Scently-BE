@@ -39,6 +39,10 @@ public class Comment extends ModifiableBaseEntity {
     private List<Comment> childComments;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ootd_id")
+    private Ootd ootd;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
     private Post post;
 
@@ -47,10 +51,11 @@ public class Comment extends ModifiableBaseEntity {
     private User user;
 
     @Builder
-    private Comment(String content, int likeCount, Comment parentComment, Post post, User user) {
+    private Comment(String content, int likeCount, Comment parentComment, Ootd ootd, Post post, User user) {
         this.content = content;
         this.likeCount = likeCount;
         this.parentComment = parentComment;
+        this.ootd = ootd;
         this.post = post;
         this.user = user;
     }

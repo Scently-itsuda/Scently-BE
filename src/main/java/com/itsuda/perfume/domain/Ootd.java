@@ -37,10 +37,17 @@ public class Ootd extends ModifiableBaseEntity {
     @Column(nullable = false)
     private String content;
 
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private int commentCount;
+
     // ------------------------ 관계 설정 ----------------------------
 
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdImage> ootdImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "perfume_id", nullable = false)

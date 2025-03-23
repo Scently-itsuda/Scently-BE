@@ -29,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -42,6 +43,7 @@ import static org.mockito.BDDMockito.given;
 
 @Transactional
 @SpringBootTest
+@ActiveProfiles("test")
 class OotdServiceTest {
 
     @MockBean

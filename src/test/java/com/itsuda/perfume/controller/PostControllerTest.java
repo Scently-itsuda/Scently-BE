@@ -1,8 +1,10 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
+import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.service.PostService;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +20,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -72,6 +75,20 @@ class PostControllerTest {
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/posts/1/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("자유게시판 게시글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void test() throws Exception {
+        // given
+        PostLikeDto result = new PostLikeDto(null, null);
+
+        Mockito.when(postService.sendLikeToPost(anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

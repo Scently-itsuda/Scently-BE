@@ -66,4 +66,12 @@ public class Post extends ModifiableBaseEntity {
         this.likeCount = 0;
         this.commentCount = 0;
     }
+
+    public void decreaseLikeCount() {
+        this.likeCount--;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
 }

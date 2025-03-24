@@ -15,6 +15,7 @@ import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.PostRepository;
+import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +32,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,6 +66,8 @@ class PostServiceTest {
     private EntityManager em;
 
     private User user;
+    @Autowired
+    private UserLikePostRepository userLikePostRepository;
 
     @BeforeEach
     void setUp() {
@@ -191,6 +193,37 @@ class PostServiceTest {
         assertThat(result.totalCommentCount()).isEqualTo(5);
         assertThat(result.commentInfos()).extracting(CommentInfoDto::commentCount)
                 .containsExactly(2, 1);
+    }
+
+    @DisplayName("자유게시판 게시글에 좋아요를 요청하면 해당 게시글의 좋아요가 1만큼 오르고 사용자는 좋아요를 누른 것을 확인할 수 있다.")
+    @Test
+    void increasePostLikesAndCheckLike() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        int originLikeCount = post.getLikeCount();
+
+        // when
+        postService.sendLikeToPost(post.getId(), user.getId());
+
+        // then
+        assertThat(post.getLikeCount()).isEqualTo(originLikeCount + 1);
+        assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isTrue();
+    }
+
+    @DisplayName("사용자가 좋아요를 누른 자유게시판 게시글에 좋아요를 한번 더 누르면 좋아요가 취소된다.")
+    @Test
+    void cancelLikeToLikedPost() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        postService.sendLikeToPost(post.getId(), user.getId());
+        int originLikeCount = post.getLikeCount();
+
+        // when
+        postService.sendLikeToPost(post.getId(), user.getId());
+
+        // then
+        assertThat(post.getLikeCount()).isEqualTo(originLikeCount - 1);
+        assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isFalse();
     }
 
     private void setMockingTime(int minute) {

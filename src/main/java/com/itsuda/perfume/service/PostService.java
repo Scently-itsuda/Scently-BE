@@ -7,6 +7,7 @@ import com.itsuda.perfume.domain.UserLikePost;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
@@ -83,4 +84,23 @@ public class PostService {
         post.increaseLikeCount();
         return new PostLikeDto(post.getId(), true);
     }
+
+    @Transactional
+    public PostCommentDto writeCommentToPost(Long postId, Long userId, Long commentId, String content) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
+
+        Comment comment = commentRepository.save(Comment.builder().
+                content(content)
+                .likeCount(0)
+                .parentComment(parentComment.orElse(null))
+                .ootd(null)
+                .post(post)
+                .user(user)
+                .build());
+
+        return new PostCommentDto(comment.getId());
+    }
+
 }

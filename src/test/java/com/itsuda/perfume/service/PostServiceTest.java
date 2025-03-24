@@ -9,6 +9,7 @@ import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.post.CommentInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
@@ -224,6 +225,40 @@ class PostServiceTest {
         // then
         assertThat(post.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isFalse();
+    }
+
+    @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
+    @Test
+    void writeCommentToPost() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+
+        // when
+        PostCommentDto result = postService.writeCommentToPost(post.getId(), user.getId(), null, "test comment");
+        Optional<Comment> comment = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(comment.isPresent()).isTrue();
+        assertThat(comment.get()).extracting("parentComment", "content")
+                .contains(null, "test comment");
+    }
+
+    @DisplayName("사용자가 게시글에 달린 댓글의 답글을 단다.")
+    @Test
+    void writeReplyToPostComment() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createComment(1, null, post, user));
+
+        // when
+        PostCommentDto result = postService.writeCommentToPost(post.getId(), user.getId(),
+                comment.getId(), "test comment");
+        Optional<Comment> reply = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(reply.isPresent()).isTrue();
+        assertThat(reply.get()).extracting("parentComment", "content")
+                .contains(comment, "test comment");
     }
 
     private void setMockingTime(int minute) {

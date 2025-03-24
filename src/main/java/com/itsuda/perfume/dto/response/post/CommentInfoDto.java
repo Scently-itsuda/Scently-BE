@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record CommentInfoDto(
+        Long commentId,
         Long userId,
         String profileImageUrl,
         LocalDateTime createdAt,
@@ -17,6 +18,7 @@ public record CommentInfoDto(
 
     public static CommentInfoDto from(Comment comment) {
         return new CommentInfoDto(
+                comment.getId(),
                 comment.getUser().getId(),
                 comment.getUser().getImageUrl(),
                 comment.getCreatedAt(),

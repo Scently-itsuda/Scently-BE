@@ -76,7 +76,7 @@ class OotdControllerTest {
         Mockito.when(ootdService.sendLikeToOotd(anyLong(), anyLong())).thenReturn(result);
 
         // when // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1").with(csrf()))
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/like").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

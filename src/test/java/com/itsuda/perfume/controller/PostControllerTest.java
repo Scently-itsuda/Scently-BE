@@ -88,7 +88,7 @@ class PostControllerTest {
         Mockito.when(postService.sendLikeToPost(anyLong(), anyLong())).thenReturn(result);
 
         // when // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1").with(csrf()))
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/like").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

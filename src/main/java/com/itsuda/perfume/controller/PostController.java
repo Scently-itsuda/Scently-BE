@@ -40,7 +40,7 @@ public class PostController {
     }
 
     @Operation(summary = "자유게시판 게시글 좋아요 오청", description = "자유게시판 게시글에 좋아요를 요청합니다.")
-    @PostMapping("/{postId}")
+    @PostMapping("/{postId}/like")
     public ResponseDto<PostLikeDto> likePostByPostId(@PathVariable Long postId) {
         return new ResponseDto<>(postService.sendLikeToPost(postId, 0L));
     }

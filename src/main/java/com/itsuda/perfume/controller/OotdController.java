@@ -39,7 +39,7 @@ public class OotdController {
     }
 
     @Operation(summary = "OOTD 게시글 좋아요 오청", description = "OOTD 게시글에 좋아요를 요청합니다.")
-    @PostMapping("/{ootdId}")
+    @PostMapping("/{ootdId}/like")
     public ResponseDto<OotdLikeDto> likeOotdByOotdId(@PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.sendLikeToOotd(ootdId, 0L));
     }

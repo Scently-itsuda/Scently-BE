@@ -1,8 +1,10 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.request.post.CreatePostDto;
 import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostLikeDto;
@@ -36,6 +38,13 @@ public class PostController {
             @RequestParam(required = false, defaultValue = "NEWEST") PostOrderType order,
             @RequestParam int page, @RequestParam int size) {
         return new ResponseDto<>(postService.getPostsByOrderType(page, size, order));
+    }
+
+    @PostMapping
+    @Operation(summary = "게시글 작성", description = "자유게시판에 게시글을 작성합니다.")
+    public ResponseDto<CreatedPostDto> createPost(@Valid @RequestBody CreatePostDto createPostDto) {
+        return new ResponseDto<>(postService.createPost(
+                0L, createPostDto.title(), createPostDto.content(), createPostDto.tagNames()));
     }
 
     @GetMapping("/{postId}")

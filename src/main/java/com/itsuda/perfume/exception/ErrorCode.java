@@ -23,6 +23,7 @@ public enum ErrorCode {
     INVALID_FUTURE_DATE("1400", HttpStatus.BAD_REQUEST, "미래 날짜는 입력할 수 없습니다"),
     INVALID_NICKNAME_FORMAT("1400", HttpStatus.BAD_REQUEST, "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다"),
     INVALID_NICKNAME_LENGTH("1400", HttpStatus.BAD_REQUEST, "닉네임은 2자 이상 16자 이하여야 합니다"),
+    INVALID_COMMENT_COMMENT("1400", HttpStatus.BAD_REQUEST, "댓글은 공백이 아닌 1글자 이상이 포함되어야 합니다."),
     NICKNAME_ALREADY_EXISTS("1400", HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다"),
     NICKNAME_CONTAINS_FORBIDDEN("1400", HttpStatus.BAD_REQUEST, "사용할 수 없는 단어가 포함되어 있습니다"),
     INVALID_POTENTIAL_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 부향률 타입입니다"),

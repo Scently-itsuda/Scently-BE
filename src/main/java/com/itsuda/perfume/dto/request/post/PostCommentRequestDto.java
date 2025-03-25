@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 public record PostCommentRequestDto(
         Long commentId,
 
-        @NotBlank
+        @NotBlank(message = "INVALID_COMMENT_COMMENT")
         @Schema(description = "댓글 내용", example = "텟트 댓글입니다.", minimum = "1")
         String comment
 ) {

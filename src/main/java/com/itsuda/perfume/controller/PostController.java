@@ -1,7 +1,9 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.PostOrderType;
+import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
@@ -9,10 +11,13 @@ import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,5 +54,13 @@ public class PostController {
     @Operation(summary = "게시글 상세 댓글 조회", description = "자유게시판에서 게시글 ID에 맞는 게시글을 조회합니다.")
     public ResponseDto<CommentsDto> getComments(@PathVariable Long postId) {
         return new ResponseDto<>(postService.getCommentsByPostId(postId));
+    }
+
+    @PostMapping("/{postId}/comments")
+    @Operation(summary = "게시글 댓글 추가", description = "자유게시판의 게시글에 댓글을 답니다.")
+    public ResponseDto<PostCommentDto> writeComment(
+            @PathVariable Long postId, @Validated @RequestBody PostCommentRequestDto postComment) {
+        return new ResponseDto<>(postService.writeCommentToPost(postId, 0L,
+                postComment.commentId(), postComment.comment()));
     }
 }

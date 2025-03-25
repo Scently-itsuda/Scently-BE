@@ -9,6 +9,7 @@ import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.post.CommentInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
@@ -33,6 +34,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -101,6 +103,43 @@ class PostServiceTest {
                         tuple("test title1", "test content1"),
                         tuple("test title3", "test content3")
                 );
+    }
+
+    @DisplayName("자유게시판에 제목, 내용을 가지는 게시글을 생성한다.")
+    @Test
+    void createPost() {
+        // given
+        String title = "test title";
+        String content = "test content";
+        List<String> tags = List.of();
+
+        // when
+        CreatedPostDto result = postService.createPost(user.getId(), title, content, tags);
+
+        // then
+        Optional<Post> post = postRepository.findById(result.postId());
+        assertThat(post).isPresent();
+        assertThat(post.get()).extracting("title", "content")
+                .contains(title, content);
+    }
+
+    @DisplayName("자유게시판에 특정 태그를 가지는 게시글을 생성한다.")
+    @Test
+    void createPostTags() {
+        // given
+        String title = "test title";
+        String content = "test content";
+        List<String> tags = List.of("2025", "향수", "느좋");
+
+        // when
+        CreatedPostDto result = postService.createPost(user.getId(), title, content, tags);
+        em.flush();
+        em.clear();
+
+        // then
+        Post post = postRepository.findById(result.postId()).get();
+        assertThat(post.getPostTags()).extracting(postTag -> postTag.getTag().getName())
+                .contains("2025", "향수", "느좋");
     }
 
     @DisplayName("자유게시판에 올라온 게시글 ID에 해당하는 게시글의 작성 내용과 정보를 확인할 수 있다.")

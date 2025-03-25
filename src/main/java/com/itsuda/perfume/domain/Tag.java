@@ -5,13 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Entity
 @Getter
@@ -25,14 +22,8 @@ public class Tag {
     @Column(nullable = false)
     private String name;
 
-    // ------------------------ 관계 설정 ----------------------------
-
-    @OneToMany(mappedBy = "tag")
-    private List<OotdTag> ootdTags;
-
     @Builder
-    private Tag(String name, List<OotdTag> ootdTags) {
+    private Tag(String name) {
         this.name = name;
-        this.ootdTags = ootdTags;
     }
 }

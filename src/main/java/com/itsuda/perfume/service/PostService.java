@@ -2,11 +2,14 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Post;
+import com.itsuda.perfume.domain.PostTag;
+import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserLikePost;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostDto;
@@ -18,6 +21,8 @@ import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.PostRepository;
+import com.itsuda.perfume.repository.PostTagRepository;
+import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +48,8 @@ public class PostService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final UserLikePostRepository userLikePostRepository;
+    private final TagRepository tagRepository;
+    private final PostTagRepository postTagRepository;
 
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
         // Todo: PostOrderType 정해지는 대로 그에 맞는 정렬 로직 도입
@@ -51,6 +58,18 @@ public class PostService {
         Page<Post> posts = postRepository.findAll(pageable);
         List<PostDto> postDtos = posts.stream().map(PostDto::from).toList();
         return new PostMainDto(postDtos, PageInfoDto.from(posts));
+    }
+
+    @Transactional
+    public CreatedPostDto createPost(Long userId, String title, String content, List<String> tagNames) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Post post = postRepository.save(Post.builder().title(title).content(content).user(user).build());
+        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream()
+                .map(tag -> Tag.builder().name(tag).build()).toList());
+        postTagRepository.saveAll(savedTags.stream()
+                .map(savedTag -> PostTag.builder().post(post).tag(savedTag).build()).toList());
+
+        return new CreatedPostDto(post.getId());
     }
 
     public PostDetailDto getPostDetailByPostId(Long postId) {

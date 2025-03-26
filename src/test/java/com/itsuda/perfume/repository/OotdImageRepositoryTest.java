@@ -24,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -37,6 +38,7 @@ import static org.mockito.BDDMockito.given;
 
 @Transactional
 @SpringBootTest
+@ActiveProfiles("test")
 class OotdImageRepositoryTest {
 
     @MockBean
@@ -117,7 +119,6 @@ class OotdImageRepositoryTest {
     private Ootd createOotd(int number) {
         return Ootd.builder()
                 .likeCount(number)
-                .commentCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .perfume(perfume)

@@ -16,6 +16,7 @@ import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -41,6 +43,7 @@ import static org.mockito.BDDMockito.given;
 
 @Transactional
 @SpringBootTest
+@ActiveProfiles("test")
 class OotdServiceTest {
 
     @MockBean
@@ -63,6 +66,9 @@ class OotdServiceTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserLikeOotdRepository userLikeOotdRepository;
 
     @Autowired
     private EntityManager em;
@@ -111,8 +117,8 @@ class OotdServiceTest {
         // given
         Ootd savedOotd = ootdRepository.save(createOotd(1));
         ootdImageRepository.saveAll(List.of(createOotdImage(0, savedOotd),
-                        createOotdImage(1, savedOotd),
-                        createOotdImage(2, savedOotd)));
+                createOotdImage(1, savedOotd),
+                createOotdImage(2, savedOotd)));
         em.flush();
         em.clear();
 
@@ -125,6 +131,39 @@ class OotdServiceTest {
         assertThat(ootdDetail.ootdInfo().ootdImageUrls()).hasSize(3);
     }
 
+    @DisplayName("OOTD 게시글에 좋아요를 요청하면 해당 게시글의 좋아요가 1만큼 오르고 사용자는 좋아요를 누른 것을 확인할 수 있다.")
+    @Test
+    void increaseOotdLikesAndCheckLike() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        ootdImageRepository.save(createOotdImage(0, ootd));
+        int originLikeCount = ootd.getLikeCount();
+
+        // when
+        ootdService.sendLikeToOotd(ootd.getId(), user.getId());
+
+        // then
+        assertThat(ootd.getLikeCount()).isEqualTo(originLikeCount + 1);
+        assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isTrue();
+    }
+
+    @DisplayName("사용자가 좋아요를 누른 OOTD 게시글에 좋아요를 한번 더 누르면 좋아요가 취소된다.")
+    @Test
+    void cancelLikeToLikedOotd() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        ootdImageRepository.save(createOotdImage(0, ootd));
+        ootdService.sendLikeToOotd(ootd.getId(), user.getId());
+        int originLikeCount = ootd.getLikeCount();
+
+        // when
+        ootdService.sendLikeToOotd(ootd.getId(), user.getId());
+
+        // then
+        assertThat(ootd.getLikeCount()).isEqualTo(originLikeCount - 1);
+        assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isFalse();
+    }
+
     private void setMockingTime(int minute) {
         given(dateTimeProvider.getNow())
                 .willReturn(Optional.of(
@@ -135,7 +174,6 @@ class OotdServiceTest {
     private Ootd createOotd(int number) {
         return Ootd.builder()
                 .likeCount(number)
-                .commentCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .perfume(perfume)

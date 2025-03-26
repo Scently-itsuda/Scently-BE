@@ -18,24 +18,28 @@ import org.hibernate.annotations.ColumnDefault;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
 @Getter
+@Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Ootd extends ModifiableBaseEntity {
+public class Post extends ModifiableBaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    @ColumnDefault("0")
-    private int likeCount;
-
-    @Column(nullable = false)
-    private int volume;
+    private String title;
 
     @Column(nullable = false)
     private String content;
+
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private Long viewCount;
+
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private int likeCount;
 
     @Column(nullable = false)
     @ColumnDefault("0")
@@ -43,37 +47,31 @@ public class Ootd extends ModifiableBaseEntity {
 
     // ------------------------ 관계 설정 ----------------------------
 
-    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
-    private List<OotdImage> ootdImages = new ArrayList<>();
-
-    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
-    private List<Comment> comments = new ArrayList<>();
-
-    @ManyToOne
-    @JoinColumn(name = "perfume_id", nullable = false)
-    private Perfume perfume;
-
-    @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
-    private List<OotdTag> ootdTags = new ArrayList<>();
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<PostTag> postTags = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+
     @Builder
-    private Ootd(int likeCount, int volume, String content, Perfume perfume, User user) {
-        this.likeCount = likeCount;
-        this.volume = volume;
+    private Post(String title, String content, User user) {
+        this.title = title;
         this.content = content;
-        this.perfume = perfume;
         this.user = user;
+        this.viewCount = 0L;
+        this.likeCount = 0;
+        this.commentCount = 0;
     }
 
-    public int increaseLikeCount() {
-        return ++this.likeCount;
+    public void decreaseLikeCount() {
+        this.likeCount--;
     }
 
-    public int decreaseLikeCount() {
-        return --this.likeCount;
+    public void increaseLikeCount() {
+        this.likeCount++;
     }
 }

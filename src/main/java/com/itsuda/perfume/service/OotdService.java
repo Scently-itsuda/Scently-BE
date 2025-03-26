@@ -2,9 +2,11 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
+import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
@@ -44,11 +47,29 @@ public class OotdService {
         return new OotdMainDto(ootdThumbnails, PageInfoDto.from(ootdThumbnailInfos));
     }
 
-    public OotdDetailDto getOotdDetailByOotdId(Long id, Long userId) {
-        Ootd ootd = ootdRepository.findById(id).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+    public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Boolean isLiked = userLikeOotdRepository.existsByUserAndOotd(user, ootd);
 
         return OotdDetailDto.from(ootd, ootd.getUser(), ootd.getPerfume(), isLiked);
+    }
+
+    // 추후 처리율 제한과 비동기 처리 예정
+    @Transactional
+    public OotdLikeDto sendLikeToOotd(Long ootdId, Long userId) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+
+        Optional<UserLikeOotd> userLikeOotd = userLikeOotdRepository.findByOotdAndUser(ootd, user);
+        if (userLikeOotd.isPresent()) {
+            userLikeOotdRepository.delete(userLikeOotd.get());
+            ootd.decreaseLikeCount();
+            return new OotdLikeDto(ootd.getId(), false);
+        }
+
+        userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
+        ootd.increaseLikeCount();
+        return new OotdLikeDto(ootd.getId(), true);
     }
 }

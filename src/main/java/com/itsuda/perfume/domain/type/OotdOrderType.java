@@ -4,8 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum OotdOrderType {
-    NEWEST("최신순"),
-    POPULAR("인기순");
+    NEWEST_DESCENDING("최신순"),
+    NEWEST_ASCENDING("역최신순"),
+    POPULAR_DESCENDING("인기순"),
+    POPULAR_ASCENDING("역인기순");
 
     private final String description;
 

@@ -96,7 +96,7 @@ class OotdServiceTest {
 
     @DisplayName("OOTD 게시물들의 썸네일의 정보를 최신순으로 조회한다.")
     @Test
-    void getOotdThumbnailsSortedByNewest() {
+    void getOotdThumbnailsSortedByNewestDescending() {
         // given
         setMockingTime(20);
         Ootd savedOotd1 = ootdRepository.save(createOotd(1));
@@ -111,12 +111,81 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
                 .extracting("ootdId")
                 .containsExactly(savedOotd2.getId(), savedOotd1.getId(), savedOotd3.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 역최신순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByNewestAscending() {
+        // given
+        setMockingTime(20);
+        Ootd savedOotd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        setMockingTime(30);
+        Ootd savedOotd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        setMockingTime(0);
+        Ootd savedOotd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_ASCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd3.getId(), savedOotd1.getId(), savedOotd2.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 인기순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByPopularDescending() {
+        // given
+        Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_DESCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd1.getId(), savedOotd3.getId(), savedOotd2.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 역인기순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByPopularAscending() {
+        // given
+        Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_ASCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd2.getId(), savedOotd3.getId(), savedOotd1.getId());
     }
 
     @DisplayName("OOTD 게시글 아이디에 해당하는 OOTD 게시글의 정보와 이미지들을 조회한다.")

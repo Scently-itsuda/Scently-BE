@@ -48,7 +48,7 @@ class OotdControllerTest {
         // given
         OotdMainDto result = new OotdMainDto(null, null);
 
-        Mockito.when(ootdService.getOotdThumbnailsByOrderType(anyInt(), anyInt(), eq(OotdOrderType.NEWEST), anyLong()))
+        Mockito.when(ootdService.getOotdThumbnailsByOrderType(anyInt(), anyInt(), eq(OotdOrderType.NEWEST_DESCENDING), anyLong()))
                 .thenReturn(result);
 
         // when // then

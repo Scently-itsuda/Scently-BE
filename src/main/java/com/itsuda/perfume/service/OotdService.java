@@ -42,12 +42,28 @@ public class OotdService {
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final CommentRepository commentRepository;
 
+    // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
-        // Todo: OotdOrderType이 정해지는 대로 그에 맞는 정렬 로직 도입
-        Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = Page.empty();
+        List<OotdThumbnailDto> ootdThumbnails = List.of();
 
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-        List<OotdThumbnailDto> ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
+        if (ootdOrderType.equals(OotdOrderType.NEWEST_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
+            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
+        } else if (ootdOrderType.equals(OotdOrderType.NEWEST_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").ascending());
+            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
+            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").descending());
+            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
+            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").ascending());
+            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
+            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
+        }
 
         return new OotdMainDto(ootdThumbnails, PageInfoDto.from(ootdThumbnailInfos));
     }
@@ -67,7 +83,7 @@ public class OotdService {
         return CommentsDto.from(comments);
     }
 
-    // 추후 처리율 제한과 비동기 처리 예정
+    // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
     public OotdLikeDto sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));

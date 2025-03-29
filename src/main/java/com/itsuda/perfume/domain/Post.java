@@ -35,7 +35,7 @@ public class Post extends ModifiableBaseEntity {
 
     @Column(nullable = false)
     @ColumnDefault("0")
-    private Long viewCount;
+    private long viewCount;
 
     @Column(nullable = false)
     @ColumnDefault("0")
@@ -58,13 +58,13 @@ public class Post extends ModifiableBaseEntity {
     private List<Comment> comments = new ArrayList<>();
 
     @Builder
-    private Post(String title, String content, User user) {
+    private Post(String title, String content, User user, long viewCount, int likeCount, int commentCount) {
         this.title = title;
         this.content = content;
         this.user = user;
-        this.viewCount = 0L;
-        this.likeCount = 0;
-        this.commentCount = 0;
+        this.viewCount = viewCount;
+        this.likeCount =likeCount;
+        this.commentCount = commentCount;
     }
 
     public void decreaseLikeCount() {

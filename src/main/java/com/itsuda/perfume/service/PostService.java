@@ -6,6 +6,7 @@ import com.itsuda.perfume.domain.PostTag;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserLikePost;
+import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
@@ -51,12 +52,29 @@ public class PostService {
     private final TagRepository tagRepository;
     private final PostTagRepository postTagRepository;
 
+    // TODO - 추후 전략 패턴 도입
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
-        // Todo: PostOrderType 정해지는 대로 그에 맞는 정렬 로직 도입
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Post> posts = Page.empty();
+        List<PostDto> postDtos = List.of();
 
-        Page<Post> posts = postRepository.findAll(pageable);
-        List<PostDto> postDtos = posts.stream().map(PostDto::from).toList();
+        if (postOrderType.equals(PostOrderType.NEWEST_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            posts = postRepository.findAll(pageable);
+            postDtos = posts.stream().map(PostDto::from).toList();
+        } else if (postOrderType.equals(PostOrderType.NEWEST_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
+            posts = postRepository.findAll(pageable);
+            postDtos = posts.stream().map(PostDto::from).toList();
+        } else if (postOrderType.equals(PostOrderType.POPULAR_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").descending());
+            posts = postRepository.findAll(pageable);
+            postDtos = posts.stream().map(PostDto::from).toList();
+        } else if (postOrderType.equals(PostOrderType.POPULAR_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").ascending());
+            posts = postRepository.findAll(pageable);
+            postDtos = posts.stream().map(PostDto::from).toList();
+        }
+
         return new PostMainDto(postDtos, PageInfoDto.from(posts));
     }
 
@@ -86,7 +104,7 @@ public class PostService {
         return CommentsDto.from(comments);
     }
 
-    // 추후 처리율 제한과 비동기 처리 예정
+    // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
     public PostLikeDto sendLikeToPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));

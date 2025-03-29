@@ -7,6 +7,7 @@ import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -82,5 +83,23 @@ public class OotdService {
         userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
         ootd.increaseLikeCount();
         return new OotdLikeDto(ootd.getId(), true);
+    }
+
+    @Transactional
+    public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long commentId, String content) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
+
+        Comment comment = commentRepository.save(Comment.builder().
+                content(content)
+                .likeCount(0)
+                .parentComment(parentComment.orElse(null))
+                .ootd(ootd)
+                .post(null)
+                .user(user)
+                .build());
+
+        return new OotdCommentDto(comment.getId());
     }
 }

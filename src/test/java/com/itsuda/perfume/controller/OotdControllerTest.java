@@ -1,6 +1,8 @@
 package com.itsuda.perfume.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itsuda.perfume.domain.type.OotdOrderType;
+import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
@@ -12,6 +14,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -34,6 +38,9 @@ class OotdControllerTest {
 
     @MockBean
     private OotdService ootdService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @DisplayName("OOTD 썸네일들을 조회한다.")
     @Test
@@ -94,5 +101,20 @@ class OotdControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/like").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("OOTD 게시글에 내용이 없는(공백으로 찬) 댓글은 달 수 없다.")
+    @Test
+    void replyWithNoContentsIsNotPermitted() throws Exception {
+        // given
+        OotdCommentRequestDto ootdComment = new OotdCommentRequestDto(null, "");
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/comments").with(csrf())
+                        .content(objectMapper.writeValueAsString(ootdComment))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.result").value("1400"))
+                .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
+                .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
     }
 }

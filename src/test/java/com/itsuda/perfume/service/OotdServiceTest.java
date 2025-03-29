@@ -14,6 +14,7 @@ import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
 import com.itsuda.perfume.dto.response.ootd.CommentInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.CommentRepository;
@@ -216,6 +217,40 @@ class OotdServiceTest {
         // then
         assertThat(ootd.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isFalse();
+    }
+
+    @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
+    @Test
+    void writeCommentToOotd() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+
+        // when
+        OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(), null, "test comment");
+        Optional<Comment> comment = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(comment.isPresent()).isTrue();
+        assertThat(comment.get()).extracting("parentComment", "content")
+                .contains(null, "test comment");
+    }
+
+    @DisplayName("사용자가 게시글에 달린 댓글의 답글을 단다.")
+    @Test
+    void writeReplyToOotdComment() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(1, null, ootd, user));
+
+        // when
+        OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
+                comment.getId(), "test comment");
+        Optional<Comment> reply = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(reply.isPresent()).isTrue();
+        assertThat(reply.get()).extracting("parentComment", "content")
+                .contains(comment, "test comment");
     }
 
     private void setMockingTime(int minute) {

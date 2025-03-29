@@ -1,15 +1,18 @@
 package com.itsuda.perfume.service;
 
+import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
+import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
+import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
@@ -36,6 +39,7 @@ public class OotdService {
     private final OotdRepository ootdRepository;
     private final UserRepository userRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
+    private final CommentRepository commentRepository;
 
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
         // Todo: OotdOrderType이 정해지는 대로 그에 맞는 정렬 로직 도입
@@ -53,6 +57,13 @@ public class OotdService {
         Boolean isLiked = userLikeOotdRepository.existsByUserAndOotd(user, ootd);
 
         return OotdDetailDto.from(ootd, ootd.getUser(), ootd.getPerfume(), isLiked);
+    }
+
+    public CommentsDto getCommentsByOotdId(Long ootdId) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNull(ootd);
+
+        return CommentsDto.from(comments);
     }
 
     // 추후 처리율 제한과 비동기 처리 예정

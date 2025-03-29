@@ -1,6 +1,7 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.OotdOrderType;
+import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -43,4 +44,10 @@ public class OotdController {
     public ResponseDto<OotdLikeDto> likeOotdByOotdId(@PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.sendLikeToOotd(ootdId, 0L));
     }
+    @GetMapping("/{ootdId}/comments")
+    @Operation(summary = "게시글 상세 댓글 조회", description = "OOTD 게시글 ID에 맞는 댓글들을 조회합니다.")
+    public ResponseDto<CommentsDto> getComments(@PathVariable Long ootdId) {
+        return new ResponseDto<>(ootdService.getCommentsByOotdId(ootdId));
+    }
+
 }

@@ -1,9 +1,9 @@
-package com.itsuda.perfume.dto.request.post;
+package com.itsuda.perfume.dto.request.ootd;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
-public record PostCommentRequestDto(
+public record OotdCommentRequestDto(
         Long commentId,
 
         @NotBlank(message = "INVALID_COMMENT_COMMENT")

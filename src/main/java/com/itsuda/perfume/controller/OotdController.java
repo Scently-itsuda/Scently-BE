@@ -1,6 +1,9 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.OotdOrderType;
+import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
+import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -9,9 +12,11 @@ import com.itsuda.perfume.service.OotdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +47,19 @@ public class OotdController {
     @PostMapping("/{ootdId}/like")
     public ResponseDto<OotdLikeDto> likeOotdByOotdId(@PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.sendLikeToOotd(ootdId, 0L));
+    }
+
+    @GetMapping("/{ootdId}/comments")
+    @Operation(summary = "게시글 상세 댓글 조회", description = "OOTD 게시글 ID에 맞는 댓글들을 조회합니다.")
+    public ResponseDto<CommentsDto> getComments(@PathVariable Long ootdId) {
+        return new ResponseDto<>(ootdService.getCommentsByOotdId(ootdId));
+    }
+
+    @PostMapping("/{ootdId}/comments")
+    @Operation(summary = "게시글 댓글 추가", description = "OOTD 게시글에 댓글을 답니다.")
+    public ResponseDto<OotdCommentDto> writeComment(
+            @PathVariable Long ootdId, @Validated @RequestBody OotdCommentRequestDto postComment) {
+        return new ResponseDto<>(ootdService.writeCommentToOotd(ootdId, 0L,
+                postComment.commentId(), postComment.comment()));
     }
 }

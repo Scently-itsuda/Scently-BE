@@ -60,7 +60,7 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    @Operation(summary = "게시글 상세 댓글 조회", description = "자유게시판에서 게시글 ID에 맞는 게시글을 조회합니다.")
+    @Operation(summary = "게시글 상세 댓글 조회", description = "자유게시판에서 게시글 ID에 맞는 댓글들을 조회합니다.")
     public ResponseDto<CommentsDto> getComments(@PathVariable Long postId) {
         return new ResponseDto<>(postService.getCommentsByPostId(postId));
     }

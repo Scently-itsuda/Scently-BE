@@ -1,5 +1,6 @@
 package com.itsuda.perfume.service;
 
+import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
@@ -11,8 +12,12 @@ import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
+import com.itsuda.perfume.dto.response.ootd.CommentInfoDto;
+import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
@@ -71,6 +76,9 @@ class OotdServiceTest {
     private UserLikeOotdRepository userLikeOotdRepository;
 
     @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
     private EntityManager em;
 
     private Perfume perfume;
@@ -88,7 +96,7 @@ class OotdServiceTest {
 
     @DisplayName("OOTD 게시물들의 썸네일의 정보를 최신순으로 조회한다.")
     @Test
-    void getOotdThumbnailsSortedByNewest() {
+    void getOotdThumbnailsSortedByNewestDescending() {
         // given
         setMockingTime(20);
         Ootd savedOotd1 = ootdRepository.save(createOotd(1));
@@ -103,12 +111,81 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
                 .extracting("ootdId")
                 .containsExactly(savedOotd2.getId(), savedOotd1.getId(), savedOotd3.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 역최신순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByNewestAscending() {
+        // given
+        setMockingTime(20);
+        Ootd savedOotd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        setMockingTime(30);
+        Ootd savedOotd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        setMockingTime(0);
+        Ootd savedOotd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_ASCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd3.getId(), savedOotd1.getId(), savedOotd2.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 인기순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByPopularDescending() {
+        // given
+        Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_DESCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd1.getId(), savedOotd3.getId(), savedOotd2.getId());
+    }
+
+    @DisplayName("OOTD 게시물들의 썸네일의 정보를 역인기순으로 조회한다.")
+    @Test
+    void getOotdThumbnailsSortedByPopularAscending() {
+        // given
+        Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+
+        Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+
+        // when
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_ASCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("ootdId")
+                .containsExactly(savedOotd2.getId(), savedOotd3.getId(), savedOotd1.getId());
     }
 
     @DisplayName("OOTD 게시글 아이디에 해당하는 OOTD 게시글의 정보와 이미지들을 조회한다.")
@@ -129,6 +206,53 @@ class OotdServiceTest {
         assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")
                 .contains(savedOotd.getId(), savedOotd.getCreatedAt());
         assertThat(ootdDetail.ootdInfo().ootdImageUrls()).hasSize(3);
+    }
+
+    @DisplayName("OOTD 게시글에 달린 댓글들을 모두 조회한다.")
+    @Test
+    void getAllCommentOfOotd() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(1));
+        Comment comment1 = commentRepository.save(createComment(1, null, ootd, user));
+        Comment comment2 = commentRepository.save(createComment(2, null, ootd, user));
+        commentRepository.save(createComment(3, comment1, ootd, user));
+        commentRepository.save(createComment(4, comment1, ootd, user));
+        commentRepository.save(createComment(5, comment2, ootd, user));
+
+        em.flush();
+        em.clear();
+
+        // when
+        CommentsDto result = ootdService.getCommentsByOotdId(ootd.getId());
+
+        // then
+        assertThat(result.commentInfos()).extracting("content")
+                .containsExactly(comment1.getContent(), comment2.getContent());
+        assertThat(result.commentInfos()).extracting(commentInfo -> commentInfo.childCommentInfos().size())
+                .containsExactly(2, 1);
+    }
+
+    @DisplayName("OOTD에 달린 댓글들의 총 개수와 개별 대댓글의 개수가 조회된다.")
+    @Test
+    void getCommentCount() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(1));
+        Comment comment1 = commentRepository.save(createComment(1, null, ootd, user));
+        Comment comment2 = commentRepository.save(createComment(2, null, ootd, user));
+        Comment comment1Child1 = commentRepository.save(createComment(3, comment1, ootd, user));
+        Comment comment1Child2 = commentRepository.save(createComment(4, comment1, ootd, user));
+        Comment comment2Child1 = commentRepository.save(createComment(5, comment2, ootd, user));
+
+        em.flush();
+        em.clear();
+
+        // when
+        CommentsDto result = ootdService.getCommentsByOotdId(ootd.getId());
+
+        // then
+        assertThat(result.totalCommentCount()).isEqualTo(5);
+        assertThat(result.commentInfos()).extracting(CommentInfoDto::commentCount)
+                .containsExactly(2, 1);
     }
 
     @DisplayName("OOTD 게시글에 좋아요를 요청하면 해당 게시글의 좋아요가 1만큼 오르고 사용자는 좋아요를 누른 것을 확인할 수 있다.")
@@ -162,6 +286,40 @@ class OotdServiceTest {
         // then
         assertThat(ootd.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isFalse();
+    }
+
+    @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
+    @Test
+    void writeCommentToOotd() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+
+        // when
+        OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(), null, "test comment");
+        Optional<Comment> comment = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(comment.isPresent()).isTrue();
+        assertThat(comment.get()).extracting("parentComment", "content")
+                .contains(null, "test comment");
+    }
+
+    @DisplayName("사용자가 게시글에 달린 댓글의 답글을 단다.")
+    @Test
+    void writeReplyToOotdComment() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(1, null, ootd, user));
+
+        // when
+        OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
+                comment.getId(), "test comment");
+        Optional<Comment> reply = commentRepository.findById(result.commentId());
+
+        // then
+        assertThat(reply.isPresent()).isTrue();
+        assertThat(reply.get()).extracting("parentComment", "content")
+                .contains(comment, "test comment");
     }
 
     private void setMockingTime(int minute) {
@@ -216,6 +374,16 @@ class OotdServiceTest {
                 .potential(PotentialType.EDT)
                 .description("test desc")
                 .registeredAt(LocalDate.of(2025, 2, 1))
+                .build();
+    }
+
+    private static Comment createComment(int number, Comment parent, Ootd ootd, User user) {
+        return Comment.builder()
+                .content("test content" + number)
+                .likeCount(number)
+                .parentComment(parent)
+                .ootd(ootd)
+                .user(user)
                 .build();
     }
 }

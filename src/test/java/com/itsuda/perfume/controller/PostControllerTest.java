@@ -41,6 +41,7 @@ class PostControllerTest {
 
     @MockBean
     private PostService postService;
+
     @Autowired
     private ObjectMapper objectMapper;
 

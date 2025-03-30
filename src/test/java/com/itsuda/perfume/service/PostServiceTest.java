@@ -39,7 +39,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.BDDMockito.given;
 
 @Transactional
@@ -81,7 +80,7 @@ class PostServiceTest {
 
     @DisplayName("자유게시판에 올라온 게시글의 목록들을 최신순으로 조회한다.")
     @Test
-    void getPostsOrderByNewest() {
+    void getPostsOrderByNewestDescending() {
         // given
         setMockingTime(20);
         Post post1 = postRepository.save(createPost(1, user));
@@ -93,16 +92,78 @@ class PostServiceTest {
         Post post3 = postRepository.save(createPost(3, user));
 
         // when
-        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.NEWEST);
+        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.NEWEST_DESCENDING);
 
         // then
-        assertThat(result.dataList())
-                .extracting("title", "content")
-                .containsExactly(
-                        tuple("test title2", "test content2"),
-                        tuple("test title1", "test content1"),
-                        tuple("test title3", "test content3")
-                );
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("postId")
+                .containsExactly(post2.getId(), post1.getId(), post3.getId());
+    }
+
+    @DisplayName("자유게시판에 올라온 게시글의 목록들을 역최신순으로 조회한다.")
+    @Test
+    void getPostsOrderByNewestAscending() {
+        // given
+        setMockingTime(20);
+        Post post1 = postRepository.save(createPost(1, user));
+
+        setMockingTime(30);
+        Post post2 = postRepository.save(createPost(2, user));
+
+        setMockingTime(0);
+        Post post3 = postRepository.save(createPost(3, user));
+
+        // when
+        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.NEWEST_ASCENDING);
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("postId")
+                .containsExactly(post3.getId(), post1.getId(), post2.getId());
+    }
+
+    @DisplayName("자유게시판에 올라온 게시글의 목록들을 인기순으로 조회한다.")
+    @Test
+    void getPostsOrderByPopularDescending() {
+        // given
+        setMockingTime(20);
+        Post post1 = postRepository.save(createPost(3, user));
+
+        setMockingTime(30);
+        Post post2 = postRepository.save(createPost(1, user));
+
+        setMockingTime(0);
+        Post post3 = postRepository.save(createPost(2, user));
+
+        // when
+        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_DESCENDING);
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("postId")
+                .containsExactly(post1.getId(), post3.getId(), post2.getId());
+    }
+
+    @DisplayName("자유게시판에 올라온 게시글의 목록들을 역인기순으로 조회한다.")
+    @Test
+    void getPostsOrderByPopularAscending() {
+        // given
+        setMockingTime(20);
+        Post post1 = postRepository.save(createPost(3, user));
+
+        setMockingTime(30);
+        Post post2 = postRepository.save(createPost(1, user));
+
+        setMockingTime(0);
+        Post post3 = postRepository.save(createPost(2, user));
+
+        // when
+        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_ASCENDING);
+
+        // then
+        assertThat(result.dataList()).hasSize(3)
+                .extracting("postId")
+                .containsExactly(post2.getId(), post3.getId(), post1.getId());
     }
 
     @DisplayName("자유게시판에 제목, 내용을 가지는 게시글을 생성한다.")
@@ -327,6 +388,7 @@ class PostServiceTest {
         return Post.builder()
                 .title("test title" + number)
                 .content("test content" + number)
+                .likeCount(number)
                 .user(user)
                 .build();
     }

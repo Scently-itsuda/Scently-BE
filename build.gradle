@@ -39,6 +39,9 @@ dependencies {
 	// h2
 	runtimeOnly 'com.h2database:h2'
 
+    // Firebase
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'

@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -28,4 +29,10 @@ public class OotdTag {
     @ManyToOne
     @JoinColumn(name = "tag_id")
     private Tag tag;
+
+    @Builder
+    private OotdTag(Ootd ootd, Tag tag) {
+        this.ootd = ootd;
+        this.tag = tag;
+    }
 }

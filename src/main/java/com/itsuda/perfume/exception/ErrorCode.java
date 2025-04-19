@@ -24,7 +24,8 @@ public enum ErrorCode {
     INVALID_NICKNAME_FORMAT("1400", HttpStatus.BAD_REQUEST, "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다"),
     INVALID_NICKNAME_LENGTH("1400", HttpStatus.BAD_REQUEST, "닉네임은 2자 이상 16자 이하여야 합니다"),
     INVALID_COMMENT_COMMENT("1400", HttpStatus.BAD_REQUEST, "댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"),
-    INVALID_TAG("1400", HttpStatus.BAD_REQUEST, "태그는 공백이 아닌 1~15자여야 합니다."),
+    INVALID_TAG("1400", HttpStatus.BAD_REQUEST, "태그는 공백이 아닌 1~15자여야 하며 공백문자를 포함하면 안됩니다"),
+    INVALID_IMAGE("1400", HttpStatus.BAD_REQUEST, "이미지는 jpg, jpeq, png만 지원하며 최소 1장에서 최대 5장까지 첨부해야 합니다."),
     NICKNAME_ALREADY_EXISTS("1400", HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다"),
     NICKNAME_CONTAINS_FORBIDDEN("1400", HttpStatus.BAD_REQUEST, "사용할 수 없는 단어가 포함되어 있습니다"),
     INVALID_POTENTIAL_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 부향률 타입입니다"),
@@ -36,6 +37,7 @@ public enum ErrorCode {
     MAX_TAG_SIZE("1400", HttpStatus.BAD_REQUEST, "태그는 최대 10개까지 가능합니다"),
     EMPTY_POST_TITLE("1400", HttpStatus.BAD_REQUEST, "자유게시글의 제목은 공백이 아닌 글자가 있어야합니다"),
     EMPTY_POST_CONTENT("1400", HttpStatus.BAD_REQUEST, "자유게시글의 내용은 공백이 아닌 글자가 있어야합니다"),
+    EMPTY_OOTD_CONTENT("1400", HttpStatus.BAD_REQUEST, "OOTD의 내용은 공백이 아닌 글자가 있어야합니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),

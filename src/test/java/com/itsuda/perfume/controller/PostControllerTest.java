@@ -95,7 +95,7 @@ class PostControllerTest {
 
     @DisplayName("태그는 10개까지만 달 수 있다.")
     @Test
-    void tagSizeIsSmallerThan10A() throws Exception {
+    void tagSizeIsSmallerThan10() throws Exception {
         // given
         CreatePostDto request = new CreatePostDto("test title", " ",
                 List.of("태그1", "태그2", "태그3", "태그4", "태그5", "태그6", "태그7", "태그8", "태그9", "태그10", "태그11"));
@@ -110,7 +110,7 @@ class PostControllerTest {
     }
 
     @DisplayName("각 태그의 내용은 공백이 아니며 15자 이하이다.")
-    @ValueSource(strings = {"", " ", "이태그는총열다섯글자를넘습니다."})
+    @ValueSource(strings = {"", " ", "이태그는총열다섯글자를넘습니다.", "공벡포함 태그"})
     @ParameterizedTest
     void tagIsNotBlankAndSmallerThan15(String tag) throws Exception {
         // given
@@ -123,7 +123,7 @@ class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result").value("1400"))
                 .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
-                .andExpect(jsonPath("$.message").value("태그는 공백이 아닌 1~15자여야 합니다."));
+                .andExpect(jsonPath("$.message").value("태그는 공백이 아닌 1~15자여야 하며 공백문자를 포함하면 안됩니다"));
     }
 
     @DisplayName("자유게시판의 게시글 ID를 기반으로 게시글을 상세 조회한다.")

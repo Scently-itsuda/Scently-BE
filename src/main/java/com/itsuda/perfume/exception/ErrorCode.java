@@ -36,6 +36,7 @@ public enum ErrorCode {
     MAX_TAG_SIZE("1400", HttpStatus.BAD_REQUEST, "태그는 최대 10개까지 가능합니다"),
     EMPTY_POST_TITLE("1400", HttpStatus.BAD_REQUEST, "자유게시글의 제목은 공백이 아닌 글자가 있어야합니다"),
     EMPTY_POST_CONTENT("1400", HttpStatus.BAD_REQUEST, "자유게시글의 내용은 공백이 아닌 글자가 있어야합니다"),
+    FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),

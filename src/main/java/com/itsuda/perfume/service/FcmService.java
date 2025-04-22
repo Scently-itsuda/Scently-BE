@@ -2,11 +2,14 @@ package com.itsuda.perfume.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -16,25 +19,33 @@ public class FcmService {
 
     private final ObjectMapper objectMapper;
 
-    public void sendFCMMessage(String title, String body, String token) throws FirebaseMessagingException {
+    @Async
+    public void sendFCMMessage(String title, String body, String token) {
         FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
         Notification notification = Notification.builder()
                 .setTitle(title)
                 .setBody(body)
                 .build();
-        // 후에 비동기 메시징으로 수정
+
         firebaseMessaging.sendAsync(Message.builder().setToken(token).setNotification(notification).build());
     }
 
-    public void sendFCMMessage(String title, String body, List<String> tokens) throws FirebaseMessagingException {
+    @Async
+    public void sendFCMMessage(String title, String body, List<String> tokens) {
         FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
         Notification notification = Notification.builder()
                 .setTitle(title)
                 .setBody(body)
                 .build();
-        // 후에 비동기 메시징으로 수정
+
         tokens.forEach(token -> firebaseMessaging.sendAsync(Message.builder().setToken(token)
                 .setNotification(notification)
                 .build()));
+    }
+
+    private void valid_message(String title, String body) {
+        if (!StringUtils.hasText(title) || !StringUtils.hasText(body)) {
+            throw new RestApiException(ErrorCode.INVALID_FCM_MESSAGE);
+        }
     }
 }

@@ -41,6 +41,7 @@ public enum ErrorCode {
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
     FILE_UPLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다"),
     FILE_DOWNLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 다운로드에 실패했습니다"),
+    INVALID_FCM_MESSAGE("1500", HttpStatus.INTERNAL_SERVER_ERROR, "푸시 메시지의 제목과 본문이 비어져있습니다."),
 
     // Access Denied Error
     ACCESS_DENIED_ERROR("1401", HttpStatus.UNAUTHORIZED, "접근이 거부된 토큰입니다"),

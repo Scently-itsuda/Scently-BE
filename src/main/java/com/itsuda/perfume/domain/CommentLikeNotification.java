@@ -14,14 +14,22 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PerfumeNotification extends Notification {
+public class CommentLikeNotification extends Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "perfume_id")
-    private Perfume perfume;
+    @JoinColumn(name = "like_sender_id")
+    private User likeSender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "like_receiver_id")
+    private User likeReceiver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
 }

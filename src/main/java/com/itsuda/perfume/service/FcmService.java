@@ -1,6 +1,5 @@
 package com.itsuda.perfume.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 import com.google.firebase.messaging.Notification;
@@ -24,7 +23,6 @@ import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 @RequiredArgsConstructor
 public class FcmService {
 
-    private final ObjectMapper objectMapper;
     private final UserRepository userRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
 
@@ -46,7 +44,7 @@ public class FcmService {
     }
 
     @Async
-    public void sendFCMMessage(String title, String body, List<String> tokens) {
+    public void sendFCMMessages(String title, String body, List<String> tokens) {
         FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
         Notification notification = Notification.builder()
                 .setTitle(title)

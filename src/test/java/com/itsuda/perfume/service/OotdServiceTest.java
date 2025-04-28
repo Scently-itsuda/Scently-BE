@@ -14,6 +14,7 @@ import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
 import com.itsuda.perfume.dto.response.ootd.CommentInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -34,8 +35,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -186,6 +190,47 @@ class OotdServiceTest {
         assertThat(result.dataList()).hasSize(3)
                 .extracting("ootdId")
                 .containsExactly(savedOotd2.getId(), savedOotd3.getId(), savedOotd1.getId());
+    }
+
+    @DisplayName("OOTD에 이미지와 태그, 내용, 향수 정보를 가지는 게시글을 생성한다.")
+    @Test
+    void createPost() {
+        // given
+        String content = "test content";
+        List<String> tags = List.of();
+        List<MultipartFile> mockMultipartFiles = List.of(new MockMultipartFile("test file1", "test1.png", MediaType.IMAGE_JPEG_VALUE, "test1".getBytes()),
+                new MockMultipartFile("test file2", "test2.png", MediaType.IMAGE_JPEG_VALUE, "test2".getBytes()),
+                new MockMultipartFile("test file3", "test3.png", MediaType.IMAGE_JPEG_VALUE, "test3".getBytes()));
+
+        // when
+        CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, perfume.getId(), mockMultipartFiles);
+
+        // then
+        Optional<Ootd> ootd = ootdRepository.findById(result.ootdId());
+        assertThat(ootd).isPresent();
+        assertThat(ootd.get()).extracting("content", "perfume")
+                .contains(content, perfume);
+    }
+
+    @DisplayName("OOTD에 특정 태그를 가지는 게시글을 생성한다.")
+    @Test
+    void createPostTags() {
+        // given
+        String content = "test content";
+        List<String> tags = List.of("2025", "향수", "느좋");
+        List<MultipartFile> mockMultipartFiles = List.of(new MockMultipartFile("test file1", "test1.png", MediaType.IMAGE_JPEG_VALUE, "test1".getBytes()),
+                new MockMultipartFile("test file2", "test2.png", MediaType.IMAGE_JPEG_VALUE, "test2".getBytes()),
+                new MockMultipartFile("test file3", "test3.png", MediaType.IMAGE_JPEG_VALUE, "test3".getBytes()));
+
+        // when
+        CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, perfume.getId(), mockMultipartFiles);
+        em.flush();
+        em.clear();
+
+        // then
+        Ootd ootd = ootdRepository.findById(result.ootdId()).get();
+        assertThat(ootd.getOotdTags()).extracting(ootdTag -> ootdTag.getTag().getName())
+                .contains("2025", "향수", "느좋");
     }
 
     @DisplayName("OOTD 게시글 아이디에 해당하는 OOTD 게시글의 정보와 이미지들을 조회한다.")

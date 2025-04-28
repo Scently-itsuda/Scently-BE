@@ -1,8 +1,11 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.domain.type.OotdOrderType;
+import com.itsuda.perfume.dto.request.ootd.CreateOotdDto;
+import com.itsuda.perfume.dto.request.ootd.ImageFilesDto;
 import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
@@ -11,14 +14,17 @@ import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.OotdService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,6 +41,14 @@ public class OotdController {
             @RequestParam(required = false, defaultValue = "NEWEST") OotdOrderType order,
             @RequestParam int page, @RequestParam int size) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, order, 0L));
+    }
+
+    @PostMapping
+    @Operation(summary = "OOTD 작성", description = "OOTD 게시판에 게시글을 작성합니다.")
+    public ResponseDto<CreatedOotdDto> createOotd(@Valid @RequestPart CreateOotdDto createOotdDto,
+                                                  @Valid @ModelAttribute ImageFilesDto imageFilesDto) {
+        return new ResponseDto<>(ootdService.createOotd(0L, createOotdDto.content(), createOotdDto.tagNames(),
+                createOotdDto.volume(), createOotdDto.perfumeId(), imageFilesDto.images()));
     }
 
     @Operation(summary = "OOTD 게시글 상세 조회", description = "OOTD 게시글 ID에 맞는 게시글을 상세하게 조회합니다.")

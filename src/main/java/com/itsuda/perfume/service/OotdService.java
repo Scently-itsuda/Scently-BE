@@ -2,11 +2,16 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.OotdImage;
+import com.itsuda.perfume.domain.OotdTag;
+import com.itsuda.perfume.domain.Perfume;
+import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
@@ -14,8 +19,12 @@ import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
+import com.itsuda.perfume.repository.OotdTagRepository;
+import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,11 +34,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_PERFUME;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 
 @Service
@@ -38,9 +51,13 @@ import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 public class OotdService {
 
     private final OotdRepository ootdRepository;
+    private final OotdImageRepository ootdImageRepository;
     private final UserRepository userRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final CommentRepository commentRepository;
+    private final TagRepository tagRepository;
+    private final PerfumeRepository perfumeRepository;
+    private final OotdTagRepository ootdTagRepository;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
@@ -66,6 +83,31 @@ public class OotdService {
         }
 
         return new OotdMainDto(ootdThumbnails, PageInfoDto.from(ootdThumbnailInfos));
+    }
+
+    @Transactional
+    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, Long perfumeId,
+                                     List<MultipartFile> images) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(NOT_FOUND_PERFUME));
+
+        AtomicInteger atomicInt = new AtomicInteger(0);
+        Ootd ootd = ootdRepository.save(Ootd.builder()
+                .likeCount(0)
+                .volume(volume)
+                .perfume(perfume)
+                .user(user)
+                .content(content).build());
+        ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
+                .ootd(ootd)
+                .originName(image.getOriginalFilename())
+                .saveName(UUID.randomUUID().toString())
+                .sequence(atomicInt.getAndIncrement()).build()).toList());
+        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream()
+                .map(tag -> Tag.builder().name(tag).build()).toList());
+        ootdTagRepository.saveAll(savedTags.stream().map(tag -> OotdTag.builder().ootd(ootd).tag(tag).build()).toList());
+
+        return new CreatedOotdDto(ootd.getId());
     }
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {

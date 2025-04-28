@@ -38,3 +38,4 @@ out/
 /src/main/java/com/itsuda/perfume/batch/
 /chromedriver
 .env
+/src/main/resources/firebase/*

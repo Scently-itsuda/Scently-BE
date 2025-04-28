@@ -66,3 +66,6 @@ jwt:
   secret-key: ${JWT_SECRET}
   access-token-expire-period: ${JWT_ACCESS_EXPIRATION}
   refresh-token-expire-period: ${JWT_REFRESH_EXPIRATION}
+
+fcm:
+  config-path: ${FCM-CONFIG-PATH:/firebase/scently-db31e-firebase-adminsdk-fbsvc-045b7c468d.json}

@@ -1,6 +1,12 @@
 package com.itsuda.perfume.domain;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -9,17 +15,10 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review extends BaseEntity {
+public class ReviewLike extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String content;
-    
-    private Float score;
-
-    @Column(name = "like_count", nullable = false)
-    private Integer likeCount = 0;
 
     // ------------------------ 관계 설정 ----------------------------
     
@@ -28,14 +27,12 @@ public class Review extends BaseEntity {
     private User user;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "perfume_id")
-    private Perfume perfume;
+    @JoinColumn(name = "review_id")
+    private Review review;
     
     @Builder
-    private Review(String content, Float score, User user, Perfume perfume) {
-        this.content = content;
-        this.score = score;
+    public ReviewLike(User user, Review review) {
         this.user = user;
-        this.perfume = perfume;
+        this.review = review;
     }
 }

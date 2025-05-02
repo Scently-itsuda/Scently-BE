@@ -5,6 +5,7 @@ import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.BrandType;
 import com.itsuda.perfume.domain.type.CountryType;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -20,8 +21,10 @@ import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
+import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -47,7 +51,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 
 
 @Transactional
@@ -57,6 +64,9 @@ class OotdServiceTest {
 
     @MockBean
     private DateTimeProvider dateTimeProvider;
+
+    @MockBean
+    private FcmService fcmService;
 
     @SpyBean
     private AuditingHandler auditingHandler;
@@ -83,6 +93,12 @@ class OotdServiceTest {
     private CommentRepository commentRepository;
 
     @Autowired
+    private UserFcmTokenRepository userFcmTokenRepository;
+
+    @Autowired
+    private OotdLikeNotificationRepository ootdLikeNotificationRepository;
+
+    @Autowired
     private EntityManager em;
 
     private Perfume perfume;
@@ -94,6 +110,7 @@ class OotdServiceTest {
         perfume = createTestPerfume();
         perfumeRepository.save(perfume);
         user = userRepository.save(createTestUser());
+        userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
@@ -331,6 +348,22 @@ class OotdServiceTest {
         // then
         assertThat(ootd.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isFalse();
+    }
+
+    @DisplayName("OOTD 게시글에 좋아요를 요청하면 OOTD 게시글 작성자에게 좋아요 알림이 누적된다.")
+    @Test
+    void saveUserLikeNotificationToOotdWriter() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        ootdImageRepository.save(createOotdImage(0, ootd));
+        doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+
+        // when
+        ootdService.sendLikeToOotd(ootd.getId(), user.getId());
+
+        // then
+        assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isTrue();
+        assertThat(ootdLikeNotificationRepository.findByLikeReceiver(ootd.getUser())).hasSize(1);
     }
 
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")

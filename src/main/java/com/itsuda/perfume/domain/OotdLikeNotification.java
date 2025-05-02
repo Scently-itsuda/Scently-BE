@@ -8,17 +8,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OotdLikeNotification extends Notification {
+public class OotdLikeNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String title;
+
+    private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "like_sender_id")
@@ -32,4 +37,12 @@ public class OotdLikeNotification extends Notification {
     @JoinColumn(name = "ootd_id")
     private Ootd ootd;
 
+    @Builder
+    private OotdLikeNotification(String title, String bodyMessage, User likeSender, User likeReceiver, Ootd ootd) {
+        this.title = title;
+        this.bodyMessage = bodyMessage;
+        this.likeSender = likeSender;
+        this.likeReceiver = likeReceiver;
+        this.ootd = ootd;
+    }
 }

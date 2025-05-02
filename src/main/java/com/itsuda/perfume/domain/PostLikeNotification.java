@@ -14,11 +14,15 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostLikeNotification extends Notification {
+public class PostLikeNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String title;
+
+    private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "like_sender_id")

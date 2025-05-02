@@ -14,11 +14,15 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CommentNotification extends Notification {
+public class CommentNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String title;
+
+    private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_writer_id")

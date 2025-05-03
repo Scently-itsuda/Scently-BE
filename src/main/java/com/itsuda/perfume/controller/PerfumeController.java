@@ -62,4 +62,10 @@ public class PerfumeController {
             @RequestBody ReviewRequestDto requestDto) {
         return new ResponseDto<>(perfumeService.createReview(perfumeId, requestDto));
     }
+
+    @Operation(summary = "리뷰 목록 조회", description = "향수의 리뷰 목록을 조회합니다.")
+    @GetMapping("/{perfumeId}/reviews")
+    public ResponseDto<List<ReviewResponseDto>> getReviews(@PathVariable Long perfumeId) {
+        return new ResponseDto<>(perfumeService.getReviews(perfumeId));
+    }
 }

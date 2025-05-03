@@ -105,4 +105,13 @@ public class PerfumeService {
 
         return ReviewResponseDto.from(reviewRepository.save(review));
     }
+
+    // 향수 리뷰 목록 조회
+    public List<ReviewResponseDto> getReviews(Long perfumeId) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+
+        return reviewRepository.findByPerfume(perfume).stream()
+                .map(ReviewResponseDto::from)
+                .collect(Collectors.toList());
+    }
 }

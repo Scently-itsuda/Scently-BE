@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PerfumeReviewRepository extends JpaRepository<Review, Long> {
+    Optional<Review> findByPerfume(Perfume perfume);
 }

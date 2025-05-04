@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -36,4 +37,12 @@ public class PostLikeNotification extends BaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
+    @Builder
+    private PostLikeNotification(String title, String bodyMessage, User likeSender, User likeReceiver, Post post) {
+        this.title = title;
+        this.bodyMessage = bodyMessage;
+        this.likeSender = likeSender;
+        this.likeReceiver = likeReceiver;
+        this.post = post;
+    }
 }

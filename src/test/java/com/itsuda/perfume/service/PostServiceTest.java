@@ -1,8 +1,10 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
@@ -16,7 +18,9 @@ import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.PostLikeNotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
+import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -39,7 +43,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 
 @Transactional
 @SpringBootTest
@@ -48,6 +54,9 @@ class PostServiceTest {
 
     @MockBean
     private DateTimeProvider dateTimeProvider;
+
+    @MockBean
+    private FcmService fcmService;
 
     @SpyBean
     private AuditingHandler auditingHandler;
@@ -65,15 +74,23 @@ class PostServiceTest {
     private PostService postService;
 
     @Autowired
+    private UserFcmTokenRepository userFcmTokenRepository;
+
+    @Autowired
     private EntityManager em;
 
     private User user;
+
     @Autowired
     private UserLikePostRepository userLikePostRepository;
+
+    @Autowired
+    private PostLikeNotificationRepository postLikeNotificationRepository;
 
     @BeforeEach
     void setUp() {
         user = userRepository.save(createTestUser());
+        userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
@@ -325,6 +342,21 @@ class PostServiceTest {
         // then
         assertThat(post.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isFalse();
+    }
+
+    @DisplayName("자유게시글에 좋아요를 요청하면 자유게시글 작성자에게 좋아요 알림이 누적된다.")
+    @Test
+    void saveUserLikeNotificationToOotdWriter() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+
+        // when
+        postService.sendLikeToPost(post.getId(), user.getId());
+
+        // then
+        assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isTrue();
+        assertThat(postLikeNotificationRepository.findByLikeReceiver(post.getUser())).hasSize(1);
     }
 
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")

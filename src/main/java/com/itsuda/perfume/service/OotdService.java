@@ -1,7 +1,6 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
-import com.itsuda.perfume.domain.CommentLikeNotification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdLikeNotification;
@@ -20,7 +19,6 @@ import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
-import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
@@ -148,17 +146,17 @@ public class OotdService {
             return new OotdLikeDto(ootd.getId(), false);
         }
 
+        userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
+        ootd.increaseLikeCount();
         userFcmToken.ifPresent(fcmToken -> {
-                    userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
-                    ootd.increaseLikeCount();
                     OotdLikeNotification notification = ootdLikeNotificationRepository.save(
                             OotdLikeNotification.builder()
-                            .title(user.getNickname() + "님이 회원님의 OOTD를 추천합니다.")
-                            .bodyMessage(ootd.getContent())
-                            .likeSender(user)
-                            .likeReceiver(ootd.getUser())
-                            .ootd(ootd)
-                            .build());
+                                    .title(user.getNickname() + "님이 회원님의 OOTD를 추천합니다.")
+                                    .bodyMessage(ootd.getContent())
+                                    .likeSender(user)
+                                    .likeReceiver(ootd.getUser())
+                                    .ootd(ootd)
+                                    .build());
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
         );

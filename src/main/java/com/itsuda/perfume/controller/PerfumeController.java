@@ -68,4 +68,22 @@ public class PerfumeController {
     public ResponseDto<List<ReviewResponseDto>> getReviews(@PathVariable Long perfumeId) {
         return new ResponseDto<>(perfumeService.getReviews(perfumeId));
     }
+
+    @Operation(summary = "리뷰 수정", description = "작성한 리뷰를 수정합니다.")
+    @PutMapping("/{perfumeId}/reviews/{reviewId}")
+    public ResponseDto<ReviewResponseDto> updateReview(
+            @PathVariable Long perfumeId,
+            @PathVariable Long reviewId,
+            @RequestBody ReviewRequestDto requestDto) {
+        return new ResponseDto<>(perfumeService.updateReview(perfumeId, reviewId, requestDto));
+    }
+
+    @Operation(summary = "리뷰 삭제", description = "작성한 리뷰를 삭제합니다.")
+    @DeleteMapping("/{perfumeId}/reviews/{reviewId}")
+    public ResponseDto<Void> deleteReview(
+            @PathVariable Long perfumeId,
+            @PathVariable Long reviewId) {
+        perfumeService.deleteReview(perfumeId, reviewId);
+        return new ResponseDto<>(null);
+    }
 }

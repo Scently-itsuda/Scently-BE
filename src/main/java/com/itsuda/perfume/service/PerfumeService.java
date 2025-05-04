@@ -114,4 +114,24 @@ public class PerfumeService {
                 .map(ReviewResponseDto::from)
                 .collect(Collectors.toList());
     }
+
+    // 향수 리뷰 수정
+    @Transactional
+    public ReviewResponseDto updateReview(Long perfumeId, Long reviewId, ReviewRequestDto requestDto) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+        Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW));
+
+        review.update(requestDto.getContent(), requestDto.getRating());
+        return ReviewResponseDto.from(review);
+    }
+
+    // 향수 리뷰 삭제
+    public void deleteReview(Long perfumeId, Long reviewId) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+        Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW));
+        reviewRepository.delete(review);
+    }
+
 }

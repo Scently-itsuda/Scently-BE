@@ -38,4 +38,19 @@ public class Review extends BaseEntity {
         this.user = user;
         this.perfume = perfume;
     }
+
+    public void update(String content, float score) {
+        this.content = content;
+        this.score = score;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
+    }
 }

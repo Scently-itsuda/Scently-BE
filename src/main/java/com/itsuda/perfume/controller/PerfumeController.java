@@ -86,4 +86,22 @@ public class PerfumeController {
         perfumeService.deleteReview(perfumeId, reviewId);
         return new ResponseDto<>(null);
     }
+
+    @Operation(summary = "리뷰 좋아요", description = "리뷰에 좋아요를 추가합니다.")
+    @PostMapping("/{perfumeId}/reviews/{reviewId}/like")
+    public ResponseDto<ReviewResponseDto> likeReview(
+            @PathVariable Long perfumeId,
+            @PathVariable Long reviewId,
+            @RequestParam Long userId) {
+        return new ResponseDto<>(perfumeService.likeReview(perfumeId, reviewId, userId));
+    }
+
+    @Operation(summary = "리뷰 좋아요 취소", description = "리뷰의 좋아요를 취소합니다.")
+    @DeleteMapping("/{perfumeId}/reviews/{reviewId}/like")
+    public ResponseDto<ReviewResponseDto> unlikeReview(
+            @PathVariable Long perfumeId,
+            @PathVariable Long reviewId,
+            @RequestParam Long userId) {
+        return new ResponseDto<>(perfumeService.unlikeReview(perfumeId, reviewId, userId));
+    }
 }

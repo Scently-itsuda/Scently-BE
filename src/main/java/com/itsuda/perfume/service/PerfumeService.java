@@ -11,7 +11,6 @@ import com.itsuda.perfume.repository.AccordRepository;
 import com.itsuda.perfume.repository.PerfumeDetailRepository;
 import com.itsuda.perfume.repository.PerfumeReviewRepository;
 import com.itsuda.perfume.repository.PerfumeVolumeRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,11 +31,12 @@ import com.itsuda.perfume.repository.UserRepository;
 import com.itsuda.perfume.dto.request.ReviewRequestDto;
 import com.itsuda.perfume.dto.response.ReviewResponseDto;
 import com.itsuda.perfume.domain.ReviewLike;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 @Service
+@Transactional(readOnly = true)
 public class PerfumeService {
     private final PerfumeRepository perfumeRepository;
     private final AccordRepository accordRepository;
@@ -127,6 +127,7 @@ public class PerfumeService {
     }
 
     // 향수 리뷰 삭제
+    @Transactional
     public void deleteReview(Long perfumeId, Long reviewId) {
         Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
         Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
@@ -134,4 +135,51 @@ public class PerfumeService {
         reviewRepository.delete(review);
     }
 
+    // 향수 리뷰 좋아요
+    @Transactional
+    public ReviewResponseDto likeReview(Long perfumeId, Long reviewId, Long userId) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+
+        Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW));
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
+
+        // 이미 좋아요를 눌렀는지 확인
+        if (reviewLikeRepository.existsByReviewAndUser(review, user)) {
+            throw new RestApiException(ErrorCode.ALREADY_LIKED_REVIEW);
+        }
+
+        // 좋아요 엔티티 생성
+        ReviewLike reviewLike = ReviewLike.builder()
+                .review(review)
+                .user(user)
+                .build();
+        
+        reviewLikeRepository.save(reviewLike);
+        review.increaseLikeCount();
+
+        return ReviewResponseDto.from(review);  // 업데이트된 리뷰 정보 반환
+    }
+
+    // 향수 리뷰 좋아요 취소
+    @Transactional
+    public ReviewResponseDto unlikeReview(Long perfumeId, Long reviewId, Long userId) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+
+        Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW));
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
+
+        ReviewLike reviewLike = reviewLikeRepository.findByReviewAndUser(review, user)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW_LIKE));
+        
+        reviewLikeRepository.delete(reviewLike);
+        review.decreaseLikeCount();
+
+        return ReviewResponseDto.from(review);  // 업데이트된 리뷰 정보 반환
+    }
 }

@@ -3,6 +3,7 @@ package com.itsuda.perfume.service;
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
+import com.itsuda.perfume.domain.PostCommentNotification;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -18,6 +19,7 @@ import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.PostCommentNotificationRepository;
 import com.itsuda.perfume.repository.PostLikeNotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
@@ -86,6 +88,9 @@ class PostServiceTest {
 
     @Autowired
     private PostLikeNotificationRepository postLikeNotificationRepository;
+
+    @Autowired
+    private PostCommentNotificationRepository postCommentNotificationRepository;
 
     @BeforeEach
     void setUp() {
@@ -391,6 +396,24 @@ class PostServiceTest {
         assertThat(reply.isPresent()).isTrue();
         assertThat(reply.get()).extracting("parentComment", "content")
                 .contains(comment, "test comment");
+    }
+
+    @DisplayName("사용자가 자유게시글에 댓글을 달면, 자우게시글 작성자에게 알림이 누적된다.")
+    @Test
+    void savePostCommentNotificationToPostWriter() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createComment(1, null, post, user));
+        doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+
+        // when
+        PostCommentDto result = postService.writeCommentToPost(post.getId(), user.getId(),
+                comment.getId(), "test comment");
+        List<PostCommentNotification> notifications = postCommentNotificationRepository.findByCommentReceiver(user);
+
+        // then
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications).extracting("commentWriter").containsExactly(user);
     }
 
     private void setMockingTime(int minute) {

@@ -414,11 +414,11 @@ class OotdServiceTest {
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
                 comment.getId(), "test comment");
-        List<OotdCommentNotification> commentNotifications = ootdCommentNotificationRepository.findByCommentReceiver(user);
+        List<OotdCommentNotification> notifications = ootdCommentNotificationRepository.findByCommentReceiver(user);
 
         // then
-        assertThat(commentNotifications).hasSize(1);
-        assertThat(commentNotifications).extracting("commentWriter").containsExactly(user);
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications).extracting("commentWriter").containsExactly(user);
     }
 
     private void setMockingTime(int minute) {

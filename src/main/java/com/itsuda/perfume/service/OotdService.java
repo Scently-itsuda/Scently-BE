@@ -1,6 +1,7 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdLikeNotification;
@@ -21,6 +22,7 @@ import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdRepository;
@@ -65,6 +67,7 @@ public class OotdService {
     private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
     private final FcmService fcmService;
     private final UserFcmTokenRepository userFcmTokenRepository;
+    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
@@ -167,6 +170,7 @@ public class OotdService {
     public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long commentId, String content) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
 
         Comment comment = commentRepository.save(Comment.builder().
@@ -178,6 +182,18 @@ public class OotdService {
                 .user(user)
                 .build());
 
+        userFcmToken.ifPresent(fcmToken -> {
+                    OotdCommentNotification notification = ootdCommentNotificationRepository.save(
+                            OotdCommentNotification.builder()
+                                    .title(user.getNickname() + "님이 " + ootd.getUser() + "님의 게시물에 댓글을 남겼습니다.")
+                                    .bodyMessage(comment.getContent())
+                                    .commentWriter(user)
+                                    .commentReceiver(comment.getUser())
+                                    .ootd(ootd)
+                                    .build());
+                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
+                }
+        );
         return new OotdCommentDto(comment.getId());
     }
 }

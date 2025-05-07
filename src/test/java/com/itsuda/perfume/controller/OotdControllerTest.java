@@ -5,6 +5,7 @@ import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.request.ootd.CreateOotdDto;
 import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -292,5 +293,19 @@ class OotdControllerTest {
                 .andExpect(jsonPath("$.result").value("1400"))
                 .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
                 .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
+    }
+
+    @DisplayName("OOTD 게시글의 댓글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void sendLikeToOotdComment() throws Exception {
+        // given
+        OotdCommentLikeDto result = new OotdCommentLikeDto(null, 1);
+
+        Mockito.when(ootdService.sendLikeToOotdComment(anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/comments/0/like").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
     }
 }

@@ -7,6 +7,7 @@ import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -63,17 +64,23 @@ public class OotdController {
         return new ResponseDto<>(ootdService.sendLikeToOotd(ootdId, 0L));
     }
 
-    @GetMapping("/{ootdId}/comments")
     @Operation(summary = "게시글 상세 댓글 조회", description = "OOTD 게시글 ID에 맞는 댓글들을 조회합니다.")
+    @GetMapping("/{ootdId}/comments")
     public ResponseDto<CommentsDto> getComments(@PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.getCommentsByOotdId(ootdId));
     }
 
-    @PostMapping("/{ootdId}/comments")
     @Operation(summary = "게시글 댓글 추가", description = "OOTD 게시글에 댓글을 답니다.")
+    @PostMapping("/{ootdId}/comments")
     public ResponseDto<OotdCommentDto> writeComment(
             @PathVariable Long ootdId, @Validated @RequestBody OotdCommentRequestDto postComment) {
         return new ResponseDto<>(ootdService.writeCommentToOotd(ootdId, 0L,
                 postComment.commentId(), postComment.comment()));
+    }
+
+    @Operation(summary = "게시글 댓글 좋아요 요청", description = "OOTD 게시글의 댓글에 좋아요를 요청합니다.")
+    @PostMapping("/{ootdId}/comments/{commentId}/like")
+    public ResponseDto<OotdCommentLikeDto> likeOotdCommentByCommentId(@PathVariable Long commentId) {
+        return new ResponseDto<>(ootdService.sendLikeToOotdComment(0L, commentId));
     }
 }

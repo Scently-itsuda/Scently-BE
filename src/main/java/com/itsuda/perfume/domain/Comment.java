@@ -59,4 +59,12 @@ public class Comment extends ModifiableBaseEntity {
         this.post = post;
         this.user = user;
     }
+
+    public int increaseLikeCount() {
+        return ++this.likeCount;
+    }
+
+    public int decreaseLikeCount() {
+        return --this.likeCount;
+    }
 }

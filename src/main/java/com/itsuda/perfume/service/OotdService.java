@@ -1,8 +1,8 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
-import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdLikeNotification;
 import com.itsuda.perfume.domain.OotdTag;
@@ -10,12 +10,14 @@ import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
+import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
@@ -31,6 +33,7 @@ import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
+import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +50,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_PERFUME;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
@@ -68,6 +72,7 @@ public class OotdService {
     private final FcmService fcmService;
     private final UserFcmTokenRepository userFcmTokenRepository;
     private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
+    private final UserLikeCommentRepository userLikeCommentRepository;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
@@ -195,5 +200,20 @@ public class OotdService {
                 }
         );
         return new OotdCommentDto(comment.getId());
+    }
+
+    @Transactional
+    public OotdCommentLikeDto sendLikeToOotdComment(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+
+        Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
+        if (userLikeComment.isPresent()) {
+            userLikeCommentRepository.delete(userLikeComment.get());
+            return new OotdCommentLikeDto(false, comment.decreaseLikeCount());
+        }
+
+        userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
+        return new OotdCommentLikeDto(true, comment.increaseLikeCount());
     }
 }

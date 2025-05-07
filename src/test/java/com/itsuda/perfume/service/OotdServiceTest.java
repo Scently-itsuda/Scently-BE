@@ -18,6 +18,7 @@ import com.itsuda.perfume.dto.response.ootd.CommentInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
+import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.CommentRepository;
@@ -27,6 +28,7 @@ import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
+import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -100,6 +102,9 @@ class OotdServiceTest {
 
     @Autowired
     private OotdCommentNotificationRepository ootdCommentNotificationRepository;
+
+    @Autowired
+    private UserLikeCommentRepository userLikeCommentRepository;
 
     @Autowired
     private EntityManager em;
@@ -419,6 +424,39 @@ class OotdServiceTest {
         // then
         assertThat(notifications).hasSize(1);
         assertThat(notifications).extracting("commentWriter").containsExactly(user);
+    }
+
+    @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")
+    @Test
+    void increaseOotdCommentLikesAndCheckLike() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        int originLikeCount = comment.getLikeCount();
+
+        // when
+        ootdService.sendLikeToOotdComment(user.getId(), comment.getId());
+
+        // then
+        assertThat(comment.getLikeCount()).isEqualTo(originLikeCount + 1);
+        assertThat(userLikeCommentRepository.existsByUserAndComment(user, comment)).isTrue();
+    }
+
+    @DisplayName("사용자가 좋아요를 누른 댓글에 좋아요를 한번 더 누르면 좋아요가 취소된다.")
+    @Test
+    void cancelLikeToLikedOotdComment() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        ootdService.sendLikeToOotdComment(user.getId(), comment.getId());
+        int originLikeCount = comment.getLikeCount();
+
+        // when
+        ootdService.sendLikeToOotdComment(user.getId(), comment.getId());
+
+        // then
+        assertThat(comment.getLikeCount()).isEqualTo(originLikeCount - 1);
+        assertThat(userLikeCommentRepository.existsByUserAndComment(user, comment)).isFalse();
     }
 
     private void setMockingTime(int minute) {

@@ -8,12 +8,14 @@ import com.itsuda.perfume.domain.PostTag;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
+import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikePost;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
+import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
@@ -29,6 +31,7 @@ import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.PostTagRepository;
 import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
+import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUNT_POST;
 
@@ -60,6 +64,7 @@ public class PostService {
     private final UserFcmTokenRepository userFcmTokenRepository;
     private final PostLikeNotificationRepository postLikeNotificationRepository;
     private final PostCommentNotificationRepository postCommentNotificationRepository;
+    private final UserLikeCommentRepository userLikeCommentRepository;
 
     // TODO - 추후 전략 패턴 도입
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
@@ -175,4 +180,18 @@ public class PostService {
         return new PostCommentDto(comment.getId());
     }
 
+    @Transactional
+    public PostCommentLikeDto sendLikeToPostComment(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+
+        Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
+        if (userLikeComment.isPresent()) {
+            userLikeCommentRepository.delete(userLikeComment.get());
+            return new PostCommentLikeDto(false, comment.decreaseLikeCount());
+        }
+
+        userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
+        return new PostCommentLikeDto(true, comment.increaseLikeCount());
+    }
 }

@@ -6,6 +6,7 @@ import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
+import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
@@ -71,5 +72,11 @@ public class PostController {
             @PathVariable Long postId, @Validated @RequestBody PostCommentRequestDto postComment) {
         return new ResponseDto<>(postService.writeCommentToPost(postId, 0L,
                 postComment.commentId(), postComment.comment()));
+    }
+
+    @Operation(summary = "게시글 댓글 좋아요 요청", description = "자유게시글의 댓글에 좋아요를 요청합니다.")
+    @PostMapping("/{postId}/comments/{commentId}/like")
+    public ResponseDto<PostCommentLikeDto> likePostCommentByCommentId(@PathVariable Long commentId) {
+        return new ResponseDto<>(postService.sendLikeToPostComment(0L, commentId));
     }
 }

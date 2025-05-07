@@ -5,6 +5,7 @@ import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.request.post.CreatePostDto;
 import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
+import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
@@ -182,4 +183,17 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
     }
 
+    @DisplayName("자유게시글의 댓글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void sendLikeToPostComment() throws Exception {
+        // given
+        PostCommentLikeDto result = new PostCommentLikeDto(null, 1);
+
+        Mockito.when(postService.sendLikeToPostComment(anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/comments/0/like").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
 }

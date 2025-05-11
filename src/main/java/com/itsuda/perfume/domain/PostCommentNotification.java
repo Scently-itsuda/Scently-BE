@@ -8,17 +8,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CommentNotification extends Notification {
+public class PostCommentNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String title;
+
+    private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_writer_id")
@@ -32,4 +37,17 @@ public class CommentNotification extends Notification {
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ootd_id")
+    private Post post;
+
+    @Builder
+    private PostCommentNotification(String title, String bodyMessage, User commentWriter, User commentReceiver, Comment comment, Post post) {
+        this.title = title;
+        this.bodyMessage = bodyMessage;
+        this.commentWriter = commentWriter;
+        this.commentReceiver = commentReceiver;
+        this.comment = comment;
+        this.post = post;
+    }
 }

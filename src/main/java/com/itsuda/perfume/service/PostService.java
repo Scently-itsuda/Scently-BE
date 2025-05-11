@@ -2,11 +2,13 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Post;
+import com.itsuda.perfume.domain.PostCommentNotification;
+import com.itsuda.perfume.domain.PostLikeNotification;
 import com.itsuda.perfume.domain.PostTag;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.UserLikePost;
-import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
@@ -21,9 +23,12 @@ import com.itsuda.perfume.dto.response.post.UserInfoDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.PostCommentNotificationRepository;
+import com.itsuda.perfume.repository.PostLikeNotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.PostTagRepository;
 import com.itsuda.perfume.repository.TagRepository;
+import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +56,10 @@ public class PostService {
     private final UserLikePostRepository userLikePostRepository;
     private final TagRepository tagRepository;
     private final PostTagRepository postTagRepository;
+    private final FcmService fcmService;
+    private final UserFcmTokenRepository userFcmTokenRepository;
+    private final PostLikeNotificationRepository postLikeNotificationRepository;
+    private final PostCommentNotificationRepository postCommentNotificationRepository;
 
     // TODO - 추후 전략 패턴 도입
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
@@ -109,6 +118,7 @@ public class PostService {
     public PostLikeDto sendLikeToPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
 
         Optional<UserLikePost> userLikePost = userLikePostRepository.findByPostAndUser(post, user);
         if (userLikePost.isPresent()) {
@@ -119,6 +129,18 @@ public class PostService {
 
         userLikePostRepository.save(UserLikePost.builder().post(post).user(user).build());
         post.increaseLikeCount();
+        userFcmToken.ifPresent(fcmToken -> {
+                    PostLikeNotification notification = postLikeNotificationRepository.save(
+                            PostLikeNotification.builder()
+                                    .title(user.getNickname() + "님이 회원님의 OOTD를 추천합니다.")
+                                    .bodyMessage(post.getContent())
+                                    .likeSender(user)
+                                    .likeReceiver(post.getUser())
+                                    .post(post)
+                                    .build());
+                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
+                }
+        );
         return new PostLikeDto(post.getId(), true);
     }
 
@@ -126,6 +148,7 @@ public class PostService {
     public PostCommentDto writeCommentToPost(Long postId, Long userId, Long commentId, String content) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
 
         Comment comment = commentRepository.save(Comment.builder().
@@ -137,6 +160,18 @@ public class PostService {
                 .user(user)
                 .build());
 
+        userFcmToken.ifPresent(fcmToken -> {
+                    PostCommentNotification notification = postCommentNotificationRepository.save(
+                            PostCommentNotification.builder()
+                                    .title(user.getNickname() + "님이 " + post.getUser() + "님의 게시물에 댓글을 남겼습니다.")
+                                    .bodyMessage(comment.getContent())
+                                    .commentWriter(user)
+                                    .commentReceiver(comment.getUser())
+                                    .post(post)
+                                    .build());
+                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
+                }
+        );
         return new PostCommentDto(comment.getId());
     }
 

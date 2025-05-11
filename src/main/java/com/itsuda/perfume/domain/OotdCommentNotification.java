@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OotdLikeNotification extends BaseEntity {
+public class OotdCommentNotification extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,23 +26,28 @@ public class OotdLikeNotification extends BaseEntity {
     private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "like_sender_id")
-    private User likeSender;
+    @JoinColumn(name = "comment_writer_id")
+    private User commentWriter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "like_receiver_id")
-    private User likeReceiver;
+    @JoinColumn(name = "comment_receiver_id")
+    private User commentReceiver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ootd_id")
     private Ootd ootd;
 
     @Builder
-    private OotdLikeNotification(String title, String bodyMessage, User likeSender, User likeReceiver, Ootd ootd) {
+    private OotdCommentNotification(String title, String bodyMessage, User commentWriter, User commentReceiver, Comment comment, Ootd ootd) {
         this.title = title;
         this.bodyMessage = bodyMessage;
-        this.likeSender = likeSender;
-        this.likeReceiver = likeReceiver;
+        this.commentWriter = commentWriter;
+        this.commentReceiver = commentReceiver;
+        this.comment = comment;
         this.ootd = ootd;
     }
 }

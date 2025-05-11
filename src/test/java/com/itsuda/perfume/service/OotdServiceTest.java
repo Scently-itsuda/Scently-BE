@@ -2,9 +2,11 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.BrandType;
 import com.itsuda.perfume.domain.type.CountryType;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -19,9 +21,12 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
+import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -47,7 +52,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 
 
 @Transactional
@@ -57,6 +64,9 @@ class OotdServiceTest {
 
     @MockBean
     private DateTimeProvider dateTimeProvider;
+
+    @MockBean
+    private FcmService fcmService;
 
     @SpyBean
     private AuditingHandler auditingHandler;
@@ -83,6 +93,15 @@ class OotdServiceTest {
     private CommentRepository commentRepository;
 
     @Autowired
+    private UserFcmTokenRepository userFcmTokenRepository;
+
+    @Autowired
+    private OotdLikeNotificationRepository ootdLikeNotificationRepository;
+
+    @Autowired
+    private OotdCommentNotificationRepository ootdCommentNotificationRepository;
+
+    @Autowired
     private EntityManager em;
 
     private Perfume perfume;
@@ -94,6 +113,7 @@ class OotdServiceTest {
         perfume = createTestPerfume();
         perfumeRepository.save(perfume);
         user = userRepository.save(createTestUser());
+        userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
     }
@@ -333,6 +353,22 @@ class OotdServiceTest {
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isFalse();
     }
 
+    @DisplayName("OOTD 게시글에 좋아요를 요청하면 OOTD 게시글 작성자에게 좋아요 알림이 누적된다.")
+    @Test
+    void saveUserLikeNotificationToOotdWriter() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        ootdImageRepository.save(createOotdImage(0, ootd));
+        doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+
+        // when
+        ootdService.sendLikeToOotd(ootd.getId(), user.getId());
+
+        // then
+        assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isTrue();
+        assertThat(ootdLikeNotificationRepository.findByLikeReceiver(ootd.getUser())).hasSize(1);
+    }
+
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
     @Test
     void writeCommentToOotd() {
@@ -365,6 +401,24 @@ class OotdServiceTest {
         assertThat(reply.isPresent()).isTrue();
         assertThat(reply.get()).extracting("parentComment", "content")
                 .contains(comment, "test comment");
+    }
+
+    @DisplayName("사용자가 OOTD에 댓글을 달면, OOTD 작성자에게 알림이 누적된다.")
+    @Test
+    void saveOotdCommentNotificationToOotdWriter() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(1, null, ootd, user));
+        doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+
+        // when
+        OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
+                comment.getId(), "test comment");
+        List<OotdCommentNotification> notifications = ootdCommentNotificationRepository.findByCommentReceiver(user);
+
+        // then
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications).extracting("commentWriter").containsExactly(user);
     }
 
     private void setMockingTime(int minute) {

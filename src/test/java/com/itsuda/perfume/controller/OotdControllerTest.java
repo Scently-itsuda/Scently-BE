@@ -9,7 +9,9 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.service.OotdService;
+import com.itsuda.perfume.service.PerfumeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +30,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,6 +48,9 @@ class OotdControllerTest {
 
     @MockBean
     private OotdService ootdService;
+
+    @MockBean
+    private PerfumeService perfumeService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -65,6 +71,19 @@ class OotdControllerTest {
                                 .queryParam("page", "0")
                                 .queryParam("size", "3")
                 )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("OOTD 게시글 작성 중, 향수의 목록을 조회한다.")
+    @Test
+    void getOotdPerfumes() throws Exception {
+        // given
+        OotdPerfumesDto result = new OotdPerfumesDto(null);
+        Mockito.when(perfumeService.getAllPerfumes()).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/ootds/perfumes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

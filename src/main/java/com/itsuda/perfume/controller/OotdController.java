@@ -11,8 +11,10 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.OotdService;
+import com.itsuda.perfume.service.PerfumeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OotdController {
 
     private final OotdService ootdService;
+    private final PerfumeService perfumeService;
 
     @Operation(summary = "OOTD 게시글 목록 조회", description = "OOTD 게시글들을 정렬 순서에 맞게 조회합니다.")
     @GetMapping
@@ -44,12 +47,18 @@ public class OotdController {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, order, 0L));
     }
 
-    @PostMapping
     @Operation(summary = "OOTD 작성", description = "OOTD 게시판에 게시글을 작성합니다.")
+    @PostMapping
     public ResponseDto<CreatedOotdDto> createOotd(@Valid @RequestPart CreateOotdDto createOotdDto,
                                                   @Valid @ModelAttribute ImageFilesDto imageFilesDto) {
         return new ResponseDto<>(ootdService.createOotd(0L, createOotdDto.content(), createOotdDto.tagNames(),
                 createOotdDto.volume(), createOotdDto.perfumeId(), imageFilesDto.images()));
+    }
+
+    @Operation(summary = "OOTD 향수 조회", description = "OOTD 작성 중 모든 향수 목록을 조회합니다.")
+    @GetMapping("/perfumes")
+    public ResponseDto<OotdPerfumesDto> getOotdPerfumes() {
+        return new ResponseDto<>(perfumeService.getAllPerfumes());
     }
 
     @Operation(summary = "OOTD 게시글 상세 조회", description = "OOTD 게시글 ID에 맞는 게시글을 상세하게 조회합니다.")

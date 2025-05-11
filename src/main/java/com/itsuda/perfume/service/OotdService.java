@@ -60,19 +60,20 @@ import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 @Transactional(readOnly = true)
 public class OotdService {
 
-    private final OotdRepository ootdRepository;
-    private final OotdImageRepository ootdImageRepository;
-    private final UserRepository userRepository;
+    private final FcmService fcmService;
+
+    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
+    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
+    private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
+    private final UserFcmTokenRepository userFcmTokenRepository;
+    private final OotdImageRepository ootdImageRepository;
     private final CommentRepository commentRepository;
-    private final TagRepository tagRepository;
     private final PerfumeRepository perfumeRepository;
     private final OotdTagRepository ootdTagRepository;
-    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
-    private final FcmService fcmService;
-    private final UserFcmTokenRepository userFcmTokenRepository;
-    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
-    private final UserLikeCommentRepository userLikeCommentRepository;
+    private final OotdRepository ootdRepository;
+    private final UserRepository userRepository;
+    private final TagRepository tagRepository;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {

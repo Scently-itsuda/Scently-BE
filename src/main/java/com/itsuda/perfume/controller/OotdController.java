@@ -52,7 +52,7 @@ public class OotdController {
     public ResponseDto<CreatedOotdDto> createOotd(@Valid @RequestPart CreateOotdDto createOotdDto,
                                                   @Valid @ModelAttribute ImageFilesDto imageFilesDto) {
         return new ResponseDto<>(ootdService.createOotd(0L, createOotdDto.content(), createOotdDto.tagNames(),
-                createOotdDto.volume(), createOotdDto.perfumeId(), imageFilesDto.images()));
+                createOotdDto.volume(), createOotdDto.perfumeIds(), imageFilesDto.images()));
     }
 
     @Operation(summary = "OOTD 향수 조회", description = "OOTD 작성 중 모든 향수 목록을 조회합니다.")

@@ -26,6 +26,7 @@ public enum ErrorCode {
     INVALID_COMMENT_COMMENT("1400", HttpStatus.BAD_REQUEST, "댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"),
     INVALID_TAG("1400", HttpStatus.BAD_REQUEST, "태그는 공백이 아닌 1~15자여야 하며 공백문자를 포함하면 안됩니다"),
     INVALID_IMAGE("1400", HttpStatus.BAD_REQUEST, "이미지는 jpg, jpeq, png만 지원하며 최소 1장에서 최대 5장까지 첨부해야 합니다."),
+    INVALID_PERFUME_LIST("1400", HttpStatus.BAD_REQUEST, "향수는 최소 1개에서 최대 3개까지 등록해야 합니다"),
     NICKNAME_ALREADY_EXISTS("1400", HttpStatus.BAD_REQUEST, "이미 사용 중인 닉네임입니다"),
     NICKNAME_CONTAINS_FORBIDDEN("1400", HttpStatus.BAD_REQUEST, "사용할 수 없는 단어가 포함되어 있습니다"),
     INVALID_POTENTIAL_TYPE("1400", HttpStatus.BAD_REQUEST, "유효하지 않은 부향률 타입입니다"),

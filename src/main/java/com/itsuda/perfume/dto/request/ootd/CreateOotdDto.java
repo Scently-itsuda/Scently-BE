@@ -19,8 +19,9 @@ public record CreateOotdDto(
         int volume,
 
         @NotNull
-        @Schema(description = "향수 아이디", example = "1")
-        Long perfumeId,
+        @Size(min = 1, max = 3, message="INVALID_PERFUME_LIST")
+        @Schema(description = "향수 아이디", example = "[1, 2, 3...]", minimum = "1", maximum = "3")
+        List<Long> perfumeIds,
 
         @ValidTag
         @Size(max = 10, message = "MAX_TAG_SIZE")

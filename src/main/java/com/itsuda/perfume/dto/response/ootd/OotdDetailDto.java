@@ -4,13 +4,16 @@ import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.User;
 
+import java.util.List;
+
 public record OotdDetailDto(
         OotdInfoDto ootdInfo,
         UserInfoDto userInfo,
-        PerfumeInfoDto perfumeInfoDto
+        List<PerfumeInfoDto> perfumeInfoDto
 ) {
 
-    public static OotdDetailDto from(Ootd ootd, User user, Perfume perfume, Boolean isLiked) {
-        return new OotdDetailDto(OotdInfoDto.from(ootd, isLiked), UserInfoDto.from(user), PerfumeInfoDto.from(perfume));
+    public static OotdDetailDto from(Ootd ootd, User user, List<Perfume> perfumes, Boolean isLiked) {
+        return new OotdDetailDto(OotdInfoDto.from(ootd, isLiked), UserInfoDto.from(user),
+                perfumes.stream().map(PerfumeInfoDto::from).toList());
     }
 }

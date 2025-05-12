@@ -5,6 +5,7 @@ import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdLikeNotification;
+import com.itsuda.perfume.domain.OotdPerfume;
 import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.Tag;
@@ -27,6 +28,7 @@ import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
+import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.OotdTagRepository;
@@ -52,7 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_PERFUME;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 
 @Service
@@ -67,6 +68,7 @@ public class OotdService {
     private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
+    private final OotdPerfumeRepository ootdPerfumeRepository;
     private final OotdImageRepository ootdImageRepository;
     private final CommentRepository commentRepository;
     private final PerfumeRepository perfumeRepository;
@@ -102,16 +104,15 @@ public class OotdService {
     }
 
     @Transactional
-    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, Long perfumeId,
+    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, List<Long> perfumeId,
                                      List<MultipartFile> images) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
-        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(NOT_FOUND_PERFUME));
+        List<Perfume> perfumes = perfumeRepository.findByIdIn(perfumeId);
 
         AtomicInteger atomicInt = new AtomicInteger(0);
         Ootd ootd = ootdRepository.save(Ootd.builder()
                 .likeCount(0)
                 .volume(volume)
-                .perfume(perfume)
                 .user(user)
                 .content(content).build());
         ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
@@ -119,8 +120,10 @@ public class OotdService {
                 .originName(image.getOriginalFilename())
                 .saveName(UUID.randomUUID().toString())
                 .sequence(atomicInt.getAndIncrement()).build()).toList());
-        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream()
-                .map(tag -> Tag.builder().name(tag).build()).toList());
+        ootdPerfumeRepository.saveAll(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd)
+                .perfume(perfume).build()).toList());
+        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList());
+
         ootdTagRepository.saveAll(savedTags.stream().map(tag -> OotdTag.builder().ootd(ootd).tag(tag).build()).toList());
 
         return new CreatedOotdDto(ootd.getId());
@@ -129,9 +132,10 @@ public class OotdService {
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
         Boolean isLiked = userLikeOotdRepository.existsByUserAndOotd(user, ootd);
 
-        return OotdDetailDto.from(ootd, ootd.getUser(), ootd.getPerfume(), isLiked);
+        return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
     }
 
     public CommentsDto getCommentsByOotdId(Long ootdId) {

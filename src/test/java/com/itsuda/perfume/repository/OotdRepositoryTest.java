@@ -183,7 +183,6 @@ class OotdRepositoryTest {
                 .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
-                .perfume(perfume)
                 .user(user)
                 .build();
     }

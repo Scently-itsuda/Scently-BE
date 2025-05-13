@@ -1,5 +1,6 @@
 package com.itsuda.perfume.controller;
 
+import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.request.post.CreatePostDto;
 import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
@@ -16,7 +17,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,9 +43,11 @@ public class PostController {
 
     @PostMapping
     @Operation(summary = "게시글 작성", description = "자유게시판에 게시글을 작성합니다.")
-    public ResponseDto<CreatedPostDto> createPost(@Valid @RequestBody CreatePostDto createPostDto) {
+    public ResponseDto<CreatedPostDto> createPost(
+            @UserId Long userId,
+            @Valid @RequestBody CreatePostDto createPostDto) {
         return new ResponseDto<>(postService.createPost(
-                0L, createPostDto.title(), createPostDto.content(), createPostDto.tagNames()));
+                userId, createPostDto.title(), createPostDto.content(), createPostDto.tagNames()));
     }
 
     @GetMapping("/{postId}")
@@ -56,8 +58,8 @@ public class PostController {
 
     @Operation(summary = "자유게시판 게시글 좋아요 오청", description = "자유게시판 게시글에 좋아요를 요청합니다.")
     @PostMapping("/{postId}/like")
-    public ResponseDto<PostLikeDto> likePostByPostId(@PathVariable Long postId) {
-        return new ResponseDto<>(postService.sendLikeToPost(postId, 0L));
+    public ResponseDto<PostLikeDto> likePostByPostId(@UserId Long userId, @PathVariable Long postId) {
+        return new ResponseDto<>(postService.sendLikeToPost(postId, userId));
     }
 
     @GetMapping("/{postId}/comments")
@@ -69,14 +71,14 @@ public class PostController {
     @PostMapping("/{postId}/comments")
     @Operation(summary = "게시글 댓글 추가", description = "자유게시판의 게시글에 댓글을 답니다.")
     public ResponseDto<PostCommentDto> writeComment(
-            @PathVariable Long postId, @Validated @RequestBody PostCommentRequestDto postComment) {
-        return new ResponseDto<>(postService.writeCommentToPost(postId, 0L,
+            @UserId Long userId, @PathVariable Long postId, @Valid @RequestBody PostCommentRequestDto postComment) {
+        return new ResponseDto<>(postService.writeCommentToPost(postId, userId,
                 postComment.commentId(), postComment.comment()));
     }
 
     @Operation(summary = "게시글 댓글 좋아요 요청", description = "자유게시글의 댓글에 좋아요를 요청합니다.")
     @PostMapping("/{postId}/comments/{commentId}/like")
-    public ResponseDto<PostCommentLikeDto> likePostCommentByCommentId(@PathVariable Long commentId) {
-        return new ResponseDto<>(postService.sendLikeToPostComment(0L, commentId));
+    public ResponseDto<PostCommentLikeDto> likePostCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
+        return new ResponseDto<>(postService.sendLikeToPostComment(userId, commentId));
     }
 }

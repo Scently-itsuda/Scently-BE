@@ -131,9 +131,11 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
-        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
-        Boolean isLiked = userLikeOotdRepository.existsByUserAndOotd(user, ootd);
+        boolean isLiked = Optional.ofNullable(userId).map(usId -> {
+            User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+            return userLikeOotdRepository.existsByUserAndOotd(user, ootd);
+        }).orElse(false);
 
         return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
     }

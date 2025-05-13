@@ -2,6 +2,8 @@ package com.itsuda.perfume.dto.response.ootd;
 
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 
+import java.util.Optional;
+
 public record OotdThumbnailDto(
         Long ootdId,
         String ootdImageUrl,
@@ -11,7 +13,7 @@ public record OotdThumbnailDto(
         return new OotdThumbnailDto(
                 ootdThumbnailInfo.getOotdId(),
                 ootdThumbnailInfo.getOotdImageUrl(),
-                ootdThumbnailInfo.getIsLiked() == 1
+                ootdThumbnailInfo.getIsLiked()
         );
     }
 }

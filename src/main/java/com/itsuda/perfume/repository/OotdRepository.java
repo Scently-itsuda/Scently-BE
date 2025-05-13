@@ -16,15 +16,15 @@ public interface OotdRepository extends JpaRepository<Ootd, Long> {
     Optional<Ootd> findById(Long id);
 
     @Query(value = "SELECT o.id AS ootdId, oi.save_name AS ootdImageUrl, " +
-            "CASE WHEN ulo.id IS NULL THEN 0 ELSE 1 END AS isLiked FROM ootd o " +
+            "CASE WHEN ulo.id IS NULL THEN FALSE ELSE TRUE END AS isLiked FROM ootd o " +
             "LEFT JOIN ootd_image oi ON oi.sequence = 0 AND oi.ootd_id = o.id " +
-            "LEFT JOIN user_like_ootd ulo ON ulo.user_id = :userId AND ulo.ootd_id = o.id ",
+            "LEFT JOIN user_like_ootd ulo ON :userId IS NOT NULL AND ulo.user_id = :userId AND ulo.ootd_id = o.id ",
             nativeQuery = true)
     Page<OotdThumbnailInfo> findAllIncludingUserLiked(Pageable pageable, Long userId);
 
     interface OotdThumbnailInfo {
         Long getOotdId();
         String getOotdImageUrl();
-        int getIsLiked();
+        boolean getIsLiked();
     }
 }

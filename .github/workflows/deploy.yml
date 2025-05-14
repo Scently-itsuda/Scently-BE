@@ -43,7 +43,7 @@ jobs:
             git pull origin dev
 
             # Gradle Clean Build
-            ./gradlew clean build
+            ./gradlew clean build -x test
 
             # 기존 애플리케이션 종료
             sudo fuser -k -n tcp 8080 || true

@@ -1,5 +1,6 @@
 package com.itsuda.perfume.controller;
 
+import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.dto.request.PerfumeRequestDto;
 import com.itsuda.perfume.dto.response.PerfumeAccordDto;
 import com.itsuda.perfume.dto.response.PerfumeDetailDto;
@@ -13,6 +14,8 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,5 +47,12 @@ public class PerfumeController {
     @GetMapping("/{perfumeId}")
     public ResponseDto<PerfumeDetailDto> getPerfumeDetail(@RequestParam Long perfumeId) {
         return new ResponseDto<>(perfumeService.getPerfumeDetail(perfumeId));
+    }
+
+    @Operation(summary = "향수 위시 담기", description = "향수를 위시에 담습니다.")
+    @PostMapping("/{perfumeId}/like")
+    public ResponseDto<Void> wishPerfume(@PathVariable Long perfumeId, @UserId Long userId) {
+        perfumeService.sendWishToPerfume(perfumeId, userId);
+        return new ResponseDto<>(null);
     }
 }

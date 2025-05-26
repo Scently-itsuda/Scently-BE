@@ -5,9 +5,7 @@ import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.request.ootd.CreateOotdDto;
 import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
-import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
-import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.service.OotdService;
@@ -340,9 +338,7 @@ class OotdControllerTest {
     @Test
     void sendLikeToOotd() throws Exception {
         // given
-        OotdLikeDto result = new OotdLikeDto(null, null);
-
-        Mockito.when(ootdService.sendLikeToOotd(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(ootdService).sendLikeToOotd(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/like").with(csrf()))
@@ -369,9 +365,7 @@ class OotdControllerTest {
     @Test
     void sendLikeToOotdComment() throws Exception {
         // given
-        OotdCommentLikeDto result = new OotdCommentLikeDto(null, 1);
-
-        Mockito.when(ootdService.sendLikeToOotdComment(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(ootdService).sendLikeToOotdComment(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/comments/0/like").with(csrf()))

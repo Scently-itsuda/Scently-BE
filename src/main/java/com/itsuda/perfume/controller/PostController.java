@@ -7,9 +7,7 @@ import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
-import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
-import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.PostService;
@@ -58,8 +56,9 @@ public class PostController {
 
     @Operation(summary = "자유게시글 좋아요", description = "자유게시판 게시글에 좋아요를 요청합니다.")
     @PostMapping("/{postId}/like")
-    public ResponseDto<PostLikeDto> likePostByPostId(@UserId Long userId, @PathVariable Long postId) {
-        return new ResponseDto<>(postService.sendLikeToPost(postId, userId));
+    public ResponseDto<Void> likePostByPostId(@UserId Long userId, @PathVariable Long postId) {
+        postService.sendLikeToPost(postId, userId);
+        return new ResponseDto<>(null);
     }
 
     @Operation(summary = "자유게시글 상세 댓글 조회", description = "자유게시판에서 게시글 ID에 맞는 댓글들을 조회합니다.")
@@ -78,7 +77,8 @@ public class PostController {
 
     @Operation(summary = "자유게시글 댓글 좋아요", description = "자유게시글의 댓글에 좋아요를 요청합니다.")
     @PostMapping("/{postId}/comments/{commentId}/like")
-    public ResponseDto<PostCommentLikeDto> likePostCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
-        return new ResponseDto<>(postService.sendLikeToPostComment(userId, commentId));
+    public ResponseDto<Void> likePostCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
+        postService.sendLikeToPostComment(userId, commentId);
+        return new ResponseDto<>(null);
     }
 }

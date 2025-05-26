@@ -5,9 +5,7 @@ import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.request.post.CreatePostDto;
 import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
-import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
-import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.service.PostService;
 import org.junit.jupiter.api.DisplayName;
@@ -158,9 +156,7 @@ class PostControllerTest {
     @Test
     void likePost() throws Exception {
         // given
-        PostLikeDto result = new PostLikeDto(null, null);
-
-        Mockito.when(postService.sendLikeToPost(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(postService).sendLikeToPost(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/like").with(csrf()))
@@ -187,9 +183,7 @@ class PostControllerTest {
     @Test
     void sendLikeToPostComment() throws Exception {
         // given
-        PostCommentLikeDto result = new PostCommentLikeDto(null, 1);
-
-        Mockito.when(postService.sendLikeToPostComment(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(postService).sendLikeToPostComment(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/comments/0/like").with(csrf()))

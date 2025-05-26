@@ -18,9 +18,7 @@ import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
-import com.itsuda.perfume.dto.response.ootd.OotdCommentLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
-import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
@@ -149,7 +147,7 @@ public class OotdService {
 
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
-    public OotdLikeDto sendLikeToOotd(Long ootdId, Long userId) {
+    public void sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
@@ -158,7 +156,7 @@ public class OotdService {
         if (userLikeOotd.isPresent()) {
             userLikeOotdRepository.delete(userLikeOotd.get());
             ootd.decreaseLikeCount();
-            return new OotdLikeDto(ootd.getId(), false);
+            return;
         }
 
         userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
@@ -175,7 +173,6 @@ public class OotdService {
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
         );
-        return new OotdLikeDto(ootd.getId(), true);
     }
 
     @Transactional
@@ -210,17 +207,18 @@ public class OotdService {
     }
 
     @Transactional
-    public OotdCommentLikeDto sendLikeToOotdComment(Long userId, Long commentId) {
+    public void sendLikeToOotdComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
         if (userLikeComment.isPresent()) {
             userLikeCommentRepository.delete(userLikeComment.get());
-            return new OotdCommentLikeDto(false, comment.decreaseLikeCount());
+            comment.decreaseLikeCount();
+            return;
         }
 
         userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
-        return new OotdCommentLikeDto(true, comment.increaseLikeCount());
+        comment.increaseLikeCount();
     }
 }

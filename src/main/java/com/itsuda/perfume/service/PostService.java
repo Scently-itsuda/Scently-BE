@@ -15,11 +15,9 @@ import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
-import com.itsuda.perfume.dto.response.post.PostCommentLikeDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
 import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
-import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.dto.response.post.UserInfoDto;
 import com.itsuda.perfume.exception.ErrorCode;
@@ -120,7 +118,7 @@ public class PostService {
 
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
-    public PostLikeDto sendLikeToPost(Long postId, Long userId) {
+    public void sendLikeToPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
@@ -129,7 +127,7 @@ public class PostService {
         if (userLikePost.isPresent()) {
             userLikePostRepository.delete(userLikePost.get());
             post.decreaseLikeCount();
-            return new PostLikeDto(post.getId(), false);
+            return;
         }
 
         userLikePostRepository.save(UserLikePost.builder().post(post).user(user).build());
@@ -146,7 +144,6 @@ public class PostService {
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
         );
-        return new PostLikeDto(post.getId(), true);
     }
 
     @Transactional
@@ -181,17 +178,18 @@ public class PostService {
     }
 
     @Transactional
-    public PostCommentLikeDto sendLikeToPostComment(Long userId, Long commentId) {
+    public void sendLikeToPostComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
         if (userLikeComment.isPresent()) {
             userLikeCommentRepository.delete(userLikeComment.get());
-            return new PostCommentLikeDto(false, comment.decreaseLikeCount());
+            comment.decreaseLikeCount();
+            return;
         }
 
         userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
-        return new PostCommentLikeDto(true, comment.increaseLikeCount());
+        comment.increaseLikeCount();
     }
 }

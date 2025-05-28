@@ -1,28 +1,33 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Perfume;
+import com.itsuda.perfume.domain.PerfumeAccord;
 import com.itsuda.perfume.domain.PerfumeDetail;
 import com.itsuda.perfume.domain.PerfumeVolume;
+import com.itsuda.perfume.domain.User;
+import com.itsuda.perfume.domain.WishPerfume;
+import com.itsuda.perfume.dto.request.PerfumeRequestDto;
 import com.itsuda.perfume.dto.response.PerfumeAccordDto;
 import com.itsuda.perfume.dto.response.PerfumeDetailDto;
+import com.itsuda.perfume.dto.response.PerfumeListDto;
+import com.itsuda.perfume.dto.response.perfume.OotdPerfumeDto;
+import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.AccordRepository;
+import com.itsuda.perfume.repository.PerfumeAccordRepository;
 import com.itsuda.perfume.repository.PerfumeDetailRepository;
+import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.PerfumeVolumeRepository;
+import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.repository.WishPerfumeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
-import com.itsuda.perfume.dto.request.PerfumeRequestDto;
-import com.itsuda.perfume.dto.response.PerfumeListDto;
-import com.itsuda.perfume.repository.PerfumeRepository;
-import com.itsuda.perfume.domain.PerfumeAccord;
-import com.itsuda.perfume.repository.PerfumeAccordRepository;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -34,17 +39,19 @@ public class PerfumeService {
     private final PerfumeVolumeRepository perfumeVolumeRepository;
     private final PerfumeDetailRepository perfumeDetailRepository;
     private final PerfumeAccordRepository perfumeAccordRepository;
+    private final UserRepository userRepository;
+    private final WishPerfumeRepository wishPerfumeRepository;
 
     // 향수 목록 조회
     public List<PerfumeListDto> getPerfumes(PerfumeRequestDto perfumeRequestDto) {
         return perfumeRepository.findBySearchOptions(
-            perfumeRequestDto.getMinPrice(),
-            perfumeRequestDto.getMaxPrice(),
-            perfumeRequestDto.getGenders(),
-            perfumeRequestDto.getAccords(),
-            perfumeRequestDto.getPotentials(),
-            perfumeRequestDto.getBrands(),
-            perfumeRequestDto.getCountries()
+                perfumeRequestDto.getMinPrice(),
+                perfumeRequestDto.getMaxPrice(),
+                perfumeRequestDto.getGenders(),
+                perfumeRequestDto.getAccords(),
+                perfumeRequestDto.getPotentials(),
+                perfumeRequestDto.getBrands(),
+                perfumeRequestDto.getCountries()
         ).stream().map(PerfumeListDto::from).toList();
     }
 
@@ -56,8 +63,8 @@ public class PerfumeService {
     // 향수 상세 조회
     public PerfumeDetailDto getPerfumeDetail(Long perfumeId) {
         Perfume perfume = perfumeRepository.findById(perfumeId)
-            .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
-        
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+
         List<PerfumeVolume> perfumeVolume = perfumeVolumeRepository.findByPerfume(perfume);
         if (perfumeVolume.isEmpty()) {
             throw new RestApiException(ErrorCode.NOT_FOUND_PERFUME_VOLUME);
@@ -68,10 +75,38 @@ public class PerfumeService {
         if (perfumeAccords.isEmpty()) {
             throw new RestApiException(ErrorCode.NOT_FOUND_ACCORD);
         }
-        
+
         PerfumeDetail perfumeDetail = perfumeDetailRepository.findByPerfume(perfume)
-            .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME_DETAIL));
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME_DETAIL));
 
         return PerfumeDetailDto.from(perfume, perfumeVolume, perfumeAccords, perfumeDetail);
+    }
+
+    public OotdPerfumesDto getAllPerfumes() {
+        List<OotdPerfumeDto> ootdPerfumes = perfumeRepository.findAll().stream()
+                .map(perfume -> new OotdPerfumeDto(perfume.getId(), perfume.getImageUri(),
+                        perfume.getBrand().getDescription(), perfume.getName())).toList();
+
+        return new OotdPerfumesDto(ootdPerfumes);
+    }
+
+    public void sendWishToPerfume(Long perfumeId, Long userId) {
+        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
+        Optional<WishPerfume> wishPerfume = wishPerfumeRepository.findByPerfumeAndCustomer(perfume, user);
+
+        wishPerfume.ifPresentOrElse(
+                wish -> {
+                    if (wish.changeWishStatus()) {
+                        perfume.increaseLikeCount();
+                    } else {
+                        perfume.decreaseLikeCount();
+                    }
+                },
+                () -> {
+                    wishPerfumeRepository.save(WishPerfume.builder().perfume(perfume).customer(user).build());
+                    perfume.increaseLikeCount();
+                }
+        );
     }
 }

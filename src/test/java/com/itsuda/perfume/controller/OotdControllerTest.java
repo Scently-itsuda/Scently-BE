@@ -6,9 +6,10 @@ import com.itsuda.perfume.dto.request.ootd.CreateOotdDto;
 import com.itsuda.perfume.dto.request.ootd.OotdCommentRequestDto;
 import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
-import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.service.OotdService;
+import com.itsuda.perfume.service.PerfumeService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,6 +46,9 @@ class OotdControllerTest {
     @MockBean
     private OotdService ootdService;
 
+    @MockBean
+    private PerfumeService perfumeService;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -68,11 +72,24 @@ class OotdControllerTest {
                 .andExpect(jsonPath("$.result").value("1200"));
     }
 
+    @DisplayName("OOTD 게시글 작성 중, 향수의 목록을 조회한다.")
+    @Test
+    void getOotdPerfumes() throws Exception {
+        // given
+        OotdPerfumesDto result = new OotdPerfumesDto(null);
+        Mockito.when(perfumeService.getAllPerfumes()).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/ootds/perfumes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
     @DisplayName("OOTD 게시글을 작성할 때는 내용이 비어있거나 공백이면 안된다.")
     @Test
     void ootdMustHaveContent() throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("", 10, 10L, List.of("태그1", "태그2"));
+        CreateOotdDto request = new CreateOotdDto("", 10, List.of(10L), List.of("태그1", "태그2"));
         MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
                 MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("images", "2.png",
@@ -98,7 +115,7 @@ class OotdControllerTest {
     @Test
     void tagSizeIsSmallerOrEqualThan10() throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("test content", 10, 10L,
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L),
                 List.of("태그1", "태그2", "태그3", "태그4", "태그5", "태그6", "태그7", "태그8", "태그9", "태그10", "태그11"));
         MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
                 MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
@@ -126,7 +143,7 @@ class OotdControllerTest {
     @ParameterizedTest
     void tagIsNotBlankAndSmallerOrEqualThan15AndNotContainSpace(String tag) throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("test content", 10, 10L, List.of(tag));
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L), List.of(tag));
         MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
                 MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("images", "2.png",
@@ -149,11 +166,63 @@ class OotdControllerTest {
                         .value("태그는 공백이 아닌 1~15자여야 하며 공백문자를 포함하면 안됩니다"));
     }
 
+    @DisplayName("OOTD 게시글을 작성할 때 향수를 반드시 등록해야 한다.")
+    @Test
+    void ootdMustHavePerfume() throws Exception {
+        // given
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(), List.of("태그1", "태그2"));
+        MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
+                MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
+        MockMultipartFile image2 = new MockMultipartFile("images", "2.png",
+                MediaType.IMAGE_JPEG_VALUE, "2".getBytes());
+        MockMultipartFile image3 = new MockMultipartFile("images", "3.png",
+                MediaType.IMAGE_JPEG_VALUE, "3".getBytes());
+        MockMultipartFile json = new MockMultipartFile("createOotdDto", "createOotdDto.json",
+                MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
+        // when  // then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/ootds")
+                        .file(image1)
+                        .file(image2)
+                        .file(image3)
+                        .file(json)
+                        .with(csrf()))
+                .andExpect(jsonPath("$.result").value("1400"))
+                .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
+                .andExpect(jsonPath("$.message").value("향수는 최소 1개에서 최대 3개까지 등록해야 합니다"));
+    }
+
+    @DisplayName("OOTD 게시글을 작성할 때 향수는 최대 3개까지 등록할 수 있다.")
+    @Test
+    void ootdPerfumeIsGreaterTahn1SmallerOrEqualThan3() throws Exception {
+        // given
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L, 20L, 30L, 40L), List.of("태그1", "태그2"));
+        MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
+                MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
+        MockMultipartFile image2 = new MockMultipartFile("images", "2.png",
+                MediaType.IMAGE_JPEG_VALUE, "2".getBytes());
+        MockMultipartFile image3 = new MockMultipartFile("images", "3.png",
+                MediaType.IMAGE_JPEG_VALUE, "3".getBytes());
+        MockMultipartFile json = new MockMultipartFile("createOotdDto", "createOotdDto.json",
+                MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
+
+        // when  // then
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/ootds")
+                        .file(image1)
+                        .file(image2)
+                        .file(image3)
+                        .file(json)
+                        .with(csrf()))
+                .andExpect(jsonPath("$.result").value("1400"))
+                .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
+                .andExpect(jsonPath("$.message").value("향수는 최소 1개에서 최대 3개까지 등록해야 합니다"));
+    }
+
     @DisplayName("OOTD 게시글을 작성할 때 이미지를 반드시 첨부해야 한다.")
     @Test
     void ootdMustHaveImage() throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("test content", 10, 10L, List.of("태그1", "태그2"));
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L), List.of("태그1", "태그2"));
         MockMultipartFile json = new MockMultipartFile("createOotdDto", "createOotdDto.json",
                 MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
 
@@ -171,7 +240,7 @@ class OotdControllerTest {
     @Test
     void ootdImageIsSmallerOrEqualThan5() throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("test content", 10, 10L, List.of("태그1", "태그2"));
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L), List.of("태그1", "태그2"));
         MockMultipartFile image1 = new MockMultipartFile("images", "1.png",
                 MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("images", "2.png",
@@ -208,7 +277,7 @@ class OotdControllerTest {
     @Test
     void ootdImageExtensionIsPngOrJpgOrJpeg() throws Exception {
         // given
-        CreateOotdDto request = new CreateOotdDto("test content", 10, 10L, List.of("태그1", "태그2"));
+        CreateOotdDto request = new CreateOotdDto("test content", 10, List.of(10L), List.of("태그1", "태그2"));
         MockMultipartFile image1 = new MockMultipartFile("images", "1.gif",
                 MediaType.IMAGE_JPEG_VALUE, "1".getBytes());
         MockMultipartFile image2 = new MockMultipartFile("images", "2.jpg",
@@ -269,9 +338,7 @@ class OotdControllerTest {
     @Test
     void sendLikeToOotd() throws Exception {
         // given
-        OotdLikeDto result = new OotdLikeDto(null, null);
-
-        Mockito.when(ootdService.sendLikeToOotd(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(ootdService).sendLikeToOotd(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/like").with(csrf()))
@@ -292,5 +359,17 @@ class OotdControllerTest {
                 .andExpect(jsonPath("$.result").value("1400"))
                 .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
                 .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
+    }
+
+    @DisplayName("OOTD 게시글의 댓글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void sendLikeToOotdComment() throws Exception {
+        // given
+        Mockito.doNothing().when(ootdService).sendLikeToOotdComment(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/ootds/1/comments/0/like").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
     }
 }

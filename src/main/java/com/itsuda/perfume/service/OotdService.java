@@ -1,15 +1,17 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
-import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdLikeNotification;
+import com.itsuda.perfume.domain.OotdPerfume;
 import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
+import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikeOotd;
 import com.itsuda.perfume.domain.type.OotdOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
@@ -17,7 +19,6 @@ import com.itsuda.perfume.dto.response.ootd.CommentsDto;
 import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
-import com.itsuda.perfume.dto.response.ootd.OotdLikeDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
@@ -25,12 +26,14 @@ import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
+import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
+import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -47,8 +50,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_PERFUME;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 
 @Service
@@ -56,18 +59,21 @@ import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 @Transactional(readOnly = true)
 public class OotdService {
 
-    private final OotdRepository ootdRepository;
-    private final OotdImageRepository ootdImageRepository;
-    private final UserRepository userRepository;
+    private final FcmService fcmService;
+
+    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
+    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
+    private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
+    private final UserFcmTokenRepository userFcmTokenRepository;
+    private final OotdPerfumeRepository ootdPerfumeRepository;
+    private final OotdImageRepository ootdImageRepository;
     private final CommentRepository commentRepository;
-    private final TagRepository tagRepository;
     private final PerfumeRepository perfumeRepository;
     private final OotdTagRepository ootdTagRepository;
-    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
-    private final FcmService fcmService;
-    private final UserFcmTokenRepository userFcmTokenRepository;
-    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
+    private final OotdRepository ootdRepository;
+    private final UserRepository userRepository;
+    private final TagRepository tagRepository;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
@@ -96,16 +102,15 @@ public class OotdService {
     }
 
     @Transactional
-    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, Long perfumeId,
+    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, List<Long> perfumeId,
                                      List<MultipartFile> images) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
-        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(NOT_FOUND_PERFUME));
+        List<Perfume> perfumes = perfumeRepository.findByIdIn(perfumeId);
 
         AtomicInteger atomicInt = new AtomicInteger(0);
         Ootd ootd = ootdRepository.save(Ootd.builder()
                 .likeCount(0)
                 .volume(volume)
-                .perfume(perfume)
                 .user(user)
                 .content(content).build());
         ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
@@ -113,8 +118,10 @@ public class OotdService {
                 .originName(image.getOriginalFilename())
                 .saveName(UUID.randomUUID().toString())
                 .sequence(atomicInt.getAndIncrement()).build()).toList());
-        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream()
-                .map(tag -> Tag.builder().name(tag).build()).toList());
+        ootdPerfumeRepository.saveAll(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd)
+                .perfume(perfume).build()).toList());
+        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList());
+
         ootdTagRepository.saveAll(savedTags.stream().map(tag -> OotdTag.builder().ootd(ootd).tag(tag).build()).toList());
 
         return new CreatedOotdDto(ootd.getId());
@@ -122,10 +129,13 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
-        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
-        Boolean isLiked = userLikeOotdRepository.existsByUserAndOotd(user, ootd);
+        List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
+        boolean isLiked = Optional.ofNullable(userId).map(usId -> {
+            User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+            return userLikeOotdRepository.existsByUserAndOotd(user, ootd);
+        }).orElse(false);
 
-        return OotdDetailDto.from(ootd, ootd.getUser(), ootd.getPerfume(), isLiked);
+        return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
     }
 
     public CommentsDto getCommentsByOotdId(Long ootdId) {
@@ -137,7 +147,7 @@ public class OotdService {
 
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
-    public OotdLikeDto sendLikeToOotd(Long ootdId, Long userId) {
+    public void sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
@@ -146,7 +156,7 @@ public class OotdService {
         if (userLikeOotd.isPresent()) {
             userLikeOotdRepository.delete(userLikeOotd.get());
             ootd.decreaseLikeCount();
-            return new OotdLikeDto(ootd.getId(), false);
+            return;
         }
 
         userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
@@ -163,7 +173,6 @@ public class OotdService {
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
         );
-        return new OotdLikeDto(ootd.getId(), true);
     }
 
     @Transactional
@@ -195,5 +204,21 @@ public class OotdService {
                 }
         );
         return new OotdCommentDto(comment.getId());
+    }
+
+    @Transactional
+    public void sendLikeToOotdComment(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+
+        Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
+        if (userLikeComment.isPresent()) {
+            userLikeCommentRepository.delete(userLikeComment.get());
+            comment.decreaseLikeCount();
+            return;
+        }
+
+        userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
+        comment.increaseLikeCount();
     }
 }

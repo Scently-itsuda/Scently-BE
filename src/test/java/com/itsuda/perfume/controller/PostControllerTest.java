@@ -6,7 +6,6 @@ import com.itsuda.perfume.dto.request.post.CreatePostDto;
 import com.itsuda.perfume.dto.request.post.PostCommentRequestDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
-import com.itsuda.perfume.dto.response.post.PostLikeDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.service.PostService;
 import org.junit.jupiter.api.DisplayName;
@@ -157,9 +156,7 @@ class PostControllerTest {
     @Test
     void likePost() throws Exception {
         // given
-        PostLikeDto result = new PostLikeDto(null, null);
-
-        Mockito.when(postService.sendLikeToPost(anyLong(), anyLong())).thenReturn(result);
+        Mockito.doNothing().when(postService).sendLikeToPost(anyLong(), anyLong());
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/like").with(csrf()))
@@ -182,4 +179,15 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
     }
 
+    @DisplayName("자유게시글의 댓글에 좋아요를 눌러서 좋아요를 요청한다.")
+    @Test
+    void sendLikeToPostComment() throws Exception {
+        // given
+        Mockito.doNothing().when(postService).sendLikeToPostComment(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/posts/1/comments/0/like").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
 }

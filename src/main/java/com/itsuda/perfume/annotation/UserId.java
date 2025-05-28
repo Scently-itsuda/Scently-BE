@@ -12,4 +12,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME) //런타임까지 어노테이션 정보를 유지
 @Target(ElementType.PARAMETER) //파라미터에만 적용
 public @interface UserId {
+    boolean required() default true;
 }

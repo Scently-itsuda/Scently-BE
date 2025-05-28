@@ -12,6 +12,8 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
+import java.util.Optional;
+
 @Component
 @Slf4j
 public class UserIdArgumentResolver implements HandlerMethodArgumentResolver {
@@ -37,11 +39,11 @@ public class UserIdArgumentResolver implements HandlerMethodArgumentResolver {
         final Object userIdObj = webRequest.getAttribute("USER_ID", WebRequest.SCOPE_REQUEST);
 
         //없으면 예외처리
-        if (userIdObj == null) {
+        if (parameter.getParameterAnnotation(UserId.class).required() && userIdObj == null) {
             log.info("User_ID 없음");
             throw new RestApiException(ErrorCode.ACCESS_DENIED_ERROR);
         }
         //Long 타입으로 변환해 반환
-        return Long.valueOf(userIdObj.toString());
+        return Optional.ofNullable(userIdObj).map(userId -> Long.valueOf(userId.toString())).orElse(null);
     }
 }

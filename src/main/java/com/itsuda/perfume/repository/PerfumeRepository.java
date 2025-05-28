@@ -39,4 +39,6 @@ public interface PerfumeRepository extends JpaRepository<Perfume, Long> {
         @Param("brands") List<BrandType> brands, 
         @Param("countries") List<CountryType> countries
     );
+
+    List<Perfume> findByIdIn(List<Long> ids);
 }

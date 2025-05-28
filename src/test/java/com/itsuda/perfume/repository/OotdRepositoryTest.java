@@ -138,7 +138,7 @@ class OotdRepositoryTest {
         // then
         assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
                 .extracting(OotdThumbnailInfo::getIsLiked)
-                .containsExactly(1, 0, 1);
+                .containsExactly(true, false, true);
     }
 
     @DisplayName("OOTD 게시글 특정 번호에 해당하는 하나의 게시글과 사진들의 정보를 가져온다.")
@@ -183,7 +183,6 @@ class OotdRepositoryTest {
                 .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
-                .perfume(perfume)
                 .user(user)
                 .build();
     }

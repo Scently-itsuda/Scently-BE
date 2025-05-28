@@ -11,34 +11,27 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class WishPerfume extends ModifiableBaseEntity {
+public class OotdPerfume {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "perfume_id")
-    private Perfume perfume;
+    @JoinColumn(name = "ootd_id", nullable = false)
+    private Ootd ootd;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
-    private User customer;
-
-    @ColumnDefault("true")
-    private boolean isWished = true;
+    @JoinColumn(name = "perfume_id", nullable = false)
+    private Perfume perfume;
 
     @Builder
-    private WishPerfume(Perfume perfume, User customer) {
+    private OotdPerfume(Ootd ootd, Perfume perfume) {
+        this.ootd = ootd;
         this.perfume = perfume;
-        this.customer = customer;
-    }
-
-    public boolean changeWishStatus() {
-        return isWished = !isWished;
     }
 }

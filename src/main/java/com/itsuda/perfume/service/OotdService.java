@@ -21,6 +21,7 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
+import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
@@ -29,6 +30,7 @@ import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
+import com.itsuda.perfume.repository.OotdRepository.UserLikeOotdInfo;
 import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.TagRepository;
@@ -220,5 +222,26 @@ public class OotdService {
 
         userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
         comment.increaseLikeCount();
+    }
+
+    public UserLikeOotdsDto getAllUserLikeOotdsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Page<UserLikeOotdInfo> userLikeOotdInfos = Page.empty();
+
+        if (ootdOrderType.equals(OotdOrderType.NEWEST_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.NEWEST_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").ascending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").descending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").ascending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        }
+
+        return UserLikeOotdsDto.from(userLikeOotdInfos.getContent(), PageInfoDto.from(userLikeOotdInfos));
     }
 }

@@ -20,6 +20,7 @@ import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
@@ -482,6 +483,33 @@ class OotdServiceTest {
         // then
         assertThat(comment.getLikeCount()).isEqualTo(originLikeCount - 1);
         assertThat(userLikeCommentRepository.existsByUserAndComment(user, comment)).isFalse();
+    }
+
+    @DisplayName("사용자가 좋아요를 누른 OOTD만 확인할 수 있다.")
+    @Test
+    void getUserLikesOotds() {
+        // given
+        setMockingTime(20);
+        Ootd savedOotd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+        ootdService.sendLikeToOotd(savedOotd1.getId(), user.getId());
+
+        setMockingTime(30);
+        Ootd savedOotd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        setMockingTime(0);
+        Ootd savedOotd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+        ootdService.sendLikeToOotd(savedOotd3.getId(), user.getId());
+
+        // when
+        UserLikeOotdsDto result = ootdService.getAllUserLikeOotdsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(2)
+                .extracting("ootdId")
+                .contains(savedOotd1.getId(), savedOotd3.getId());
     }
 
     private void setMockingTime(int minute) {

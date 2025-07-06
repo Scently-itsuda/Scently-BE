@@ -1,6 +1,7 @@
 package com.itsuda.perfume.repository;
 
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -22,9 +23,23 @@ public interface OotdRepository extends JpaRepository<Ootd, Long> {
             nativeQuery = true)
     Page<OotdThumbnailInfo> findAllIncludingUserLiked(Pageable pageable, Long userId);
 
+    @Query(value = "SELECT o.id AS ootdId, oi.save_name AS ootdImageUrl FROM ootd o " +
+            "INNER JOIN user_like_ootd ulo ON :userId IS NOT NULL AND ulo.user_id = :userId AND ulo.ootd_id = o.id " +
+            "LEFT JOIN ootd_image oi ON oi.sequence = 0 AND oi.ootd_id = o.id ",
+            nativeQuery = true)
+    Page<UserLikeOotdInfo> findAllUserLikeByUser(Pageable pageable, Long userId);
+
     interface OotdThumbnailInfo {
         Long getOotdId();
+
         String getOotdImageUrl();
+
         boolean getIsLiked();
+    }
+
+    interface UserLikeOotdInfo {
+        Long getOotdId();
+
+        String getOotdImageUrl();
     }
 }

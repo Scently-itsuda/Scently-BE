@@ -8,7 +8,11 @@ import com.itsuda.perfume.domain.type.CountryType;
 import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
+import com.itsuda.perfume.domain.type.PerfumeOrderType;
 import com.itsuda.perfume.domain.type.PotentialType;
+import com.itsuda.perfume.dto.request.like.WishPerfumeRequestDto;
+import com.itsuda.perfume.dto.response.like.WishPerfumeDto;
+import com.itsuda.perfume.dto.response.like.WishPerfumesDto;
 import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.UserRepository;
@@ -119,6 +123,29 @@ class PerfumeServiceTest {
         // then
         assertThat(wishPerfume).isPresent();
         assertThat(wishPerfume.get().getPerfume().getWishCount()).isEqualTo(originWishCount - 1);
+    }
+
+    @DisplayName("사용자가 좋아요를 누른 향수 목록을 확인할 수 있다.")
+    @Test
+    void getAllWishPerfumes() {
+        // given
+        Perfume perfume1 = perfumeRepository.save(createPerfume("test1"));
+        Perfume perfume2 = perfumeRepository.save(createPerfume("test2"));
+        Perfume perfume3 = perfumeRepository.save(createPerfume("test3"));
+        User user = userRepository.save(createTestUser());
+        perfumeService.sendWishToPerfume(perfume1.getId(), user.getId());
+        perfumeService.sendWishToPerfume(perfume3.getId(), user.getId());
+        WishPerfumeRequestDto wishPerfumeRequestDto = new WishPerfumeRequestDto(null, null, null, null, null, null, null);
+
+        // when
+        WishPerfumesDto wishPerfumes = perfumeService.getAllWishPerfumes(
+                wishPerfumeRequestDto, 0, 3, PerfumeOrderType.REGISTERED_AT_DESCENDING, user.getId());
+
+        // then
+        assertThat(wishPerfumes.dataList()).size().isEqualTo(2);
+        assertThat(wishPerfumes.dataList())
+                .extracting("name")
+                .contains("test1 perfume", "test3 perfume");
     }
 
     private static Perfume createPerfume(String name) {

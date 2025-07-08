@@ -64,7 +64,7 @@ class OotdControllerTest {
         // when // then
         mockMvc.perform(
                         MockMvcRequestBuilders.get("/api/v1/ootds")
-                                .queryParam("order", "NEWEST")
+                                .queryParam("order", "NEWEST_DESCENDING")
                                 .queryParam("page", "0")
                                 .queryParam("size", "3")
                 )

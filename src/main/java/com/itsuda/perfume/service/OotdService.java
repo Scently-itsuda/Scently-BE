@@ -52,9 +52,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
+import static com.itsuda.perfume.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -131,6 +129,9 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
         boolean isLiked = Optional.ofNullable(userId).map(usId -> {
             User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
@@ -140,8 +141,23 @@ public class OotdService {
         return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
     }
 
+    @Transactional
+    public void deleteOotdByOotdId(Long ootdId, Long userId) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        List<OotdImage> ootdImages = ootd.getOotdImages();
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!ootd.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_OOTD_OWNER_DELETE);
+        }
+
+        ootdRepository.delete(ootd);
+    }
+
     public CommentsDto getCommentsByOotdId(Long ootdId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNull(ootd);
 
         return CommentsDto.from(comments);
@@ -151,6 +167,9 @@ public class OotdService {
     @Transactional
     public void sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
 
@@ -180,6 +199,9 @@ public class OotdService {
     @Transactional
     public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long commentId, String content) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);

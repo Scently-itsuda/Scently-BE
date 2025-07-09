@@ -15,6 +15,7 @@ public enum ErrorCode {
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
     NOT_FOUNT_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    DELETED_OOTD("1404", HttpStatus.NOT_FOUND, "이미 삭제된 OOTD 게시글입니다"),
 
     // Bad Request Error
     NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
@@ -39,6 +40,8 @@ public enum ErrorCode {
     EMPTY_POST_TITLE("1400", HttpStatus.BAD_REQUEST, "자유게시글의 제목은 공백이 아닌 글자가 있어야합니다"),
     EMPTY_POST_CONTENT("1400", HttpStatus.BAD_REQUEST, "자유게시글의 내용은 공백이 아닌 글자가 있어야합니다"),
     EMPTY_OOTD_CONTENT("1400", HttpStatus.BAD_REQUEST, "OOTD의 내용은 공백이 아닌 글자가 있어야합니다"),
+    ONLY_OOTD_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "OOTD 작성자만 OOTD 게시글을 삭제할 수 있습니다."),
+    ONLY_POST_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "자유게시글 작성자만 자유게시글을 삭제할 수 있습니다."),
     FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
 
     // Server, File Up/DownLoad Error

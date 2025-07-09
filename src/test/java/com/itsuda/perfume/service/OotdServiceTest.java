@@ -21,6 +21,8 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
@@ -55,6 +57,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -512,6 +515,35 @@ class OotdServiceTest {
                 .contains(savedOotd1.getId(), savedOotd3.getId());
     }
 
+    @DisplayName("OOTD를 삭제하면 해당 OOTD의 삭제날짜를 확인할 수 있다.")
+    @Test
+    void deleteOotdhasDeletedDate() {
+        // given
+        Ootd savedOotd = ootdRepository.save(createOotd(0));
+
+        // when
+        ootdService.deleteOotdByOotdId(savedOotd.getId(), user.getId());
+        em.flush();
+        em.clear();
+
+        // then
+        Ootd result = ootdRepository.findById(savedOotd.getId()).get();
+        assertThat(result.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("OOTD의 작성자만 OOTD를 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeleteOotd() {
+        // given
+        Ootd savedOotd = ootdRepository.save(createOotd(0));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> ootdService.deleteOotdByOotdId(savedOotd.getId(), otherUser.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_OOTD_OWNER_DELETE);
+    }
+
     private void setMockingTime(int minute) {
         given(dateTimeProvider.getNow())
                 .willReturn(Optional.of(
@@ -548,6 +580,22 @@ class OotdServiceTest {
                 .role(ERole.USER)
                 .serialId("123")
                 .username("test")
+                .build();
+        user.updateBirthDate("2000-05-02");
+        return user;
+    }
+
+    private static User createTestUser(int number) {
+        User user = User.builder()
+                .email(number + "test@test.com")
+                .gender(GenderType.MALE)
+                .imageUrl(number + "test url")
+                .nickname(number + "test nickname")
+                .presentation(number + "test")
+                .provider(EProvider.GOOGLE)
+                .role(ERole.USER)
+                .serialId(number + "123")
+                .username(number + "test")
                 .build();
         user.updateBirthDate("2000-05-02");
         return user;

@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,6 +68,13 @@ public class OotdController {
     public ResponseDto<OotdDetailDto> getOotdDetailByOotdID(@UserId(required = false) Long userId,
                                                             @PathVariable Long ootdId) {
         return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId, userId));
+    }
+
+    @Operation(summary = "OOTD 삭제", description = "OOTD ID에 맞는 게시글을 삭제합니다.")
+    @DeleteMapping("/{ootdId}")
+    public ResponseDto<Void> deleteOotdByOotdId(@UserId Long userId, @PathVariable Long ootdId) {
+        ootdService.deleteOotdByOotdId(ootdId, userId);
+        return new ResponseDto<>(null);
     }
 
     @Operation(summary = "OOTD 좋아요", description = "OOTD 게시글에 좋아요를 요청합니다.")

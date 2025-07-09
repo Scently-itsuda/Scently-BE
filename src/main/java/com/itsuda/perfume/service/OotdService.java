@@ -144,7 +144,9 @@ public class OotdService {
     @Transactional
     public void deleteOotdByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
-        List<OotdImage> ootdImages = ootd.getOotdImages();
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         if (!ootd.getUser().getId().equals(user.getId())) {
             throw new RestApiException(ONLY_OOTD_OWNER_DELETE);

@@ -271,7 +271,36 @@ class PostServiceTest {
         // then
         assertThatThrownBy(() -> postService.getPostDetailByPostId(savedPost.getId() + 1))
                 .isInstanceOf(RestApiException.class)
-                .extracting("errorCode").isEqualTo(ErrorCode.NOT_FOUNT_POST);
+                .extracting("errorCode").isEqualTo(ErrorCode.NOT_FOUND_POST);
+    }
+
+    @DisplayName("자유게시글을 삭제하면 해당 자유게시글의 삭제날짜를 확인할 수 있다.")
+    @Test
+    void deletePostHasDeletedDate() {
+        // given
+        Post post = postRepository.save(createPost(1, user));
+
+        // when
+        postService.deletePostByPostId(post.getId(), user.getId());
+        em.flush();
+        em.clear();
+        Post deletedPost = postRepository.findById(post.getId()).get();
+
+        // then
+        assertThat(deletedPost.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("자유게시글의 작성자만 자유게시글을 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeletePost() {
+        // given
+        Post post = postRepository.save(createPost(1, user));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> postService.deletePostByPostId(post.getId(), otherUser.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_POST_OWNER_DELETE);
     }
 
     @DisplayName("자유게시판의 게시글에 달린 댓글들을 모두 조회한다.")
@@ -470,6 +499,22 @@ class PostServiceTest {
                 .role(ERole.USER)
                 .serialId("123")
                 .username("test")
+                .build();
+        user.updateBirthDate("2000-05-02");
+        return user;
+    }
+
+    private static User createTestUser(int number) {
+        User user = User.builder()
+                .email(number + "test@test.com")
+                .gender(GenderType.MALE)
+                .imageUrl(number + "test url")
+                .nickname(number + "test nickname")
+                .presentation(number + "test")
+                .provider(EProvider.GOOGLE)
+                .role(ERole.USER)
+                .serialId(number + "123")
+                .username(number + "test")
                 .build();
         user.updateBirthDate("2000-05-02");
         return user;

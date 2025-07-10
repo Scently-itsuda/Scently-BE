@@ -517,7 +517,7 @@ class OotdServiceTest {
 
     @DisplayName("OOTD를 삭제하면 해당 OOTD의 삭제날짜를 확인할 수 있다.")
     @Test
-    void deletedOotdJasDeletedDate() {
+    void deletedOotdHasDeletedDate() {
         // given
         Ootd savedOotd = ootdRepository.save(createOotd(0));
 

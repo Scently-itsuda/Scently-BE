@@ -160,7 +160,7 @@ public class OotdService {
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }
-        List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNull(ootd);
+        List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNullAndDeletedAtIsNull(ootd);
 
         return CommentsDto.from(comments);
     }
@@ -249,6 +249,9 @@ public class OotdService {
     @Transactional
     public void sendLikeToOotdComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);

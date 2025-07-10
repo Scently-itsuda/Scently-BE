@@ -19,5 +19,5 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findAllByPostAndParentCommentIsNull(Post post);
 
     @EntityGraph(attributePaths = {"childComments", "user"})
-    List<Comment> findAllByOotdAndParentCommentIsNull(Ootd ootd);
+    List<Comment> findAllByOotdAndParentCommentIsNullAndDeletedAtIsNull(Ootd ootd);
 }

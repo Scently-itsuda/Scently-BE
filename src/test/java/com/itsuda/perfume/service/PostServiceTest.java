@@ -1,6 +1,7 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.PostCommentNotification;
 import com.itsuda.perfume.domain.User;
@@ -446,6 +447,39 @@ class PostServiceTest {
         // then
         assertThat(notifications).hasSize(1);
         assertThat(notifications).extracting("commentWriter").containsExactly(user);
+    }
+
+    @DisplayName("댓글을 삭제하면 해당 댓글의 삭제날짜를 확인할 수 있고 메시지가 삭제된 메시지입니다라고 바뀌며 좋아요는 0이 된다.")
+    @Test
+    void deletedCommentHasDeletedDateAndMessageAndLikeCountIsChanged() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createComment(0, null, post, user));
+
+        // when
+        postService.deletePostComment(user.getId(), comment.getId());
+        em.flush();
+        em.clear();
+        Comment deletedComment = commentRepository.findById(comment.getId()).get();
+
+        // then
+        assertThat(deletedComment.getDeletedAt()).isNotNull();
+        assertThat(deletedComment).extracting("content", "likeCount")
+                .contains("삭제된 댓글입니다", 0);
+    }
+
+    @DisplayName("댓글의 작성자만 댓글을 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeleteComment() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createComment(0, null, post, user));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> postService.deletePostComment(otherUser.getId(), comment.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_COMMENT_OWNER_DELETE);
     }
 
     @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")

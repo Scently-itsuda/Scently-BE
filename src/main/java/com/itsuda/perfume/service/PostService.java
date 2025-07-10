@@ -125,9 +125,26 @@ public class PostService {
 
     public CommentsDto getCommentsByPostId(Long postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
         List<Comment> comments = commentRepository.findAllByPostAndParentCommentIsNull(post);
 
         return CommentsDto.from(comments);
+    }
+
+    @Transactional
+    public void deletePostComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_COMMENT_OWNER_DELETE);
+        }
+
+        commentRepository.delete(comment);
     }
 
     // TODO - 추후 처리율 제한과 비동기 처리 예정
@@ -200,6 +217,9 @@ public class PostService {
     @Transactional
     public void sendLikeToPostComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);

@@ -563,7 +563,7 @@ class OotdServiceTest {
                 .contains("삭제된 댓글입니다", 0);
     }
 
-    @DisplayName("댓글의 작성자만 OOTD를 삭제할 수 있다.")
+    @DisplayName("댓글의 작성자만 댓글을 삭제할 수 있다.")
     @Test
     void onlyOwnerCanDeleteComment() {
         // given

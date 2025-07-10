@@ -517,7 +517,7 @@ class OotdServiceTest {
 
     @DisplayName("OOTD를 삭제하면 해당 OOTD의 삭제날짜를 확인할 수 있다.")
     @Test
-    void deleteOotdhasDeletedDate() {
+    void deletedOotdJasDeletedDate() {
         // given
         Ootd savedOotd = ootdRepository.save(createOotd(0));
 
@@ -525,9 +525,9 @@ class OotdServiceTest {
         ootdService.deleteOotdByOotdId(savedOotd.getId(), user.getId());
         em.flush();
         em.clear();
+        Ootd result = ootdRepository.findById(savedOotd.getId()).get();
 
         // then
-        Ootd result = ootdRepository.findById(savedOotd.getId()).get();
         assertThat(result.getDeletedAt()).isNotNull();
     }
 
@@ -542,6 +542,39 @@ class OotdServiceTest {
         assertThatThrownBy(() -> ootdService.deleteOotdByOotdId(savedOotd.getId(), otherUser.getId()))
                 .isInstanceOf(RestApiException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ONLY_OOTD_OWNER_DELETE);
+    }
+
+    @DisplayName("댓글을 삭제하면 해당 댓글의 삭제날짜를 확인할 수 있고 메시지가 삭제된 메시지입니다라고 바뀌며 좋아요는 0이 된다.")
+    @Test
+    void deletedCommentHasDeletedDateAndMessageAndLikeCountIsChanged() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+
+        // when
+        ootdService.deleteOotdComment(user.getId(), comment.getId());
+        em.flush();
+        em.clear();
+        Comment deletedComment = commentRepository.findById(comment.getId()).get();
+
+        // then
+        assertThat(deletedComment.getDeletedAt()).isNotNull();
+        assertThat(deletedComment).extracting("content", "likeCount")
+                .contains("삭제된 댓글입니다", 0);
+    }
+
+    @DisplayName("댓글의 작성자만 OOTD를 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeleteComment() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> ootdService.deleteOotdComment(otherUser.getId(), comment.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_COMMENT_OWNER_DELETE);
     }
 
     private void setMockingTime(int minute) {

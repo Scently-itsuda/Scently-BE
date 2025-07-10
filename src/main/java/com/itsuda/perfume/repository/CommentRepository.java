@@ -7,12 +7,17 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    @EntityGraph(attributePaths = "childComments")
+    @EntityGraph(attributePaths = {"childComments", "user"})
+    @Override
+    Optional<Comment> findById(Long commentId);
+
+    @EntityGraph(attributePaths = {"childComments", "user"})
     List<Comment> findAllByPostAndParentCommentIsNull(Post post);
 
-    @EntityGraph(attributePaths = "childComments")
+    @EntityGraph(attributePaths = {"childComments", "user"})
     List<Comment> findAllByOotdAndParentCommentIsNull(Ootd ootd);
 }

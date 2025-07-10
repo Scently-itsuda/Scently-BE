@@ -233,6 +233,20 @@ public class OotdService {
     }
 
     @Transactional
+    public void deleteOotdComment(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_COMMENT_OWNER_DELETE);
+        }
+
+        commentRepository.delete(comment);
+    }
+
+    @Transactional
     public void sendLikeToOotdComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));

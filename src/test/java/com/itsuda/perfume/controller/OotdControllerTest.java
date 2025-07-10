@@ -346,6 +346,18 @@ class OotdControllerTest {
                 .andExpect(jsonPath("$.result").value("1200"));
     }
 
+    @DisplayName("OOTD에 달린 댓글을 삭제한다.")
+    @Test
+    void deleteOotdComment() throws Exception {
+        // given
+        Mockito.doNothing().when(ootdService).deleteOotdComment(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/ootds/1/comments/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
     @DisplayName("OOTD 게시글에 좋아요를 눌러서 좋아요를 요청한다.")
     @Test
     void sendLikeToOotd() throws Exception {

@@ -99,6 +99,13 @@ public class OotdController {
                 postComment.commentId(), postComment.comment()));
     }
 
+    @Operation(summary = "OOTD 댓글 삭제", description = "OOTD 댓글을 삭제합니다.")
+    @DeleteMapping("/{ootdId}/comments/{commentId}")
+    public ResponseDto<Void> deleteOotdCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
+        ootdService.deleteOotdComment(userId, commentId);
+        return new ResponseDto<>(null);
+    }
+
     @Operation(summary = "OOTD 댓글 좋아요", description = "OOTD 게시글의 댓글에 좋아요를 요청합니다.")
     @PostMapping("/{ootdId}/comments/{commentId}/like")
     public ResponseDto<Void> likeOotdCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {

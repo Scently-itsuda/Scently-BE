@@ -5,6 +5,7 @@ public enum NotificationType {
     POST_COMMENT,
     OOTD_LIKE,
     POST_LIKE,
-    COMMENT_LIKE,
+    OOTD_COMMENT_LIKE,
+    POST_COMMENT_LIKE,
     NEW_PERFUME
 }

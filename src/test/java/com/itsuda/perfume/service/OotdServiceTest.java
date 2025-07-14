@@ -1,6 +1,7 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
@@ -20,6 +21,7 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
@@ -95,16 +97,13 @@ class OotdServiceTest {
     private UserFcmTokenRepository userFcmTokenRepository;
 
     @Autowired
-    private OotdLikeNotificationRepository ootdLikeNotificationRepository;
-
-    @Autowired
-    private OotdCommentNotificationRepository ootdCommentNotificationRepository;
-
-    @Autowired
     private UserLikeCommentRepository userLikeCommentRepository;
 
     @Autowired
     private OotdPerfumeRepository ootdPerfumeRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private EntityManager em;
@@ -393,7 +392,7 @@ class OotdServiceTest {
 
         // then
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isTrue();
-        assertThat(ootdLikeNotificationRepository.findByLikeReceiver(ootd.getUser())).hasSize(1);
+        assertThat(notificationRepository.findByNotificationReceiver(ootd.getUser())).hasSize(1);
     }
 
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
@@ -441,7 +440,7 @@ class OotdServiceTest {
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
                 comment.getId(), "test comment");
-        List<OotdCommentNotification> notifications = ootdCommentNotificationRepository.findByCommentReceiver(user);
+        List<Notification> notifications = notificationRepository.findByNotificationReceiver(user);
 
         // then
         assertThat(notifications).hasSize(1);

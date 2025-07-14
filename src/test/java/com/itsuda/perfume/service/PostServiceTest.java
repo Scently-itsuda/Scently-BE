@@ -1,6 +1,7 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
@@ -17,6 +18,7 @@ import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
+import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
@@ -79,13 +81,10 @@ class PostServiceTest {
     private UserLikePostRepository userLikePostRepository;
 
     @Autowired
-    private PostLikeNotificationRepository postLikeNotificationRepository;
-
-    @Autowired
-    private PostCommentNotificationRepository postCommentNotificationRepository;
-
-    @Autowired
     private UserLikeCommentRepository userLikeCommentRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private EntityManager em;
@@ -361,7 +360,7 @@ class PostServiceTest {
 
         // then
         assertThat(userLikePostRepository.existsByUserAndPost(user, post)).isTrue();
-        assertThat(postLikeNotificationRepository.findByLikeReceiver(post.getUser())).hasSize(1);
+        assertThat(notificationRepository.findByNotificationReceiver(post.getUser())).hasSize(1);
     }
 
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
@@ -409,7 +408,7 @@ class PostServiceTest {
         // when
         PostCommentDto result = postService.writeCommentToPost(post.getId(), user.getId(),
                 comment.getId(), "test comment");
-        List<PostCommentNotification> notifications = postCommentNotificationRepository.findByCommentReceiver(user);
+        List<Notification> notifications = notificationRepository.findByNotificationReceiver(user);
 
         // then
         assertThat(notifications).hasSize(1);

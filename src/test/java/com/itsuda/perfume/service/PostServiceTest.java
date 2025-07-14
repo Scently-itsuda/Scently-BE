@@ -2,7 +2,6 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Post;
-import com.itsuda.perfume.domain.PostCommentNotification;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -18,8 +17,6 @@ import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
-import com.itsuda.perfume.repository.PostCommentNotificationRepository;
-import com.itsuda.perfume.repository.PostLikeNotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;

@@ -1,10 +1,9 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
-import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
-import com.itsuda.perfume.domain.OotdLikeNotification;
 import com.itsuda.perfume.domain.OotdPerfume;
 import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
@@ -23,9 +22,8 @@ import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
-import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
+import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
-import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
@@ -50,6 +48,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.itsuda.perfume.domain.type.NotificationType.*;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
@@ -61,11 +60,10 @@ public class OotdService {
 
     private final FcmService fcmService;
 
-    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
-    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
     private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
+    private final NotificationRepository notificationRepository;
     private final OotdPerfumeRepository ootdPerfumeRepository;
     private final OotdImageRepository ootdImageRepository;
     private final CommentRepository commentRepository;
@@ -162,13 +160,14 @@ public class OotdService {
         userLikeOotdRepository.save(UserLikeOotd.builder().ootd(ootd).user(user).build());
         ootd.increaseLikeCount();
         userFcmToken.ifPresent(fcmToken -> {
-                    OotdLikeNotification notification = ootdLikeNotificationRepository.save(
-                            OotdLikeNotification.builder()
+                    Notification notification = notificationRepository.save(
+                            Notification.builder()
                                     .title(user.getNickname() + "님이 회원님의 OOTD를 추천합니다.")
                                     .bodyMessage(ootd.getContent())
-                                    .likeSender(user)
-                                    .likeReceiver(ootd.getUser())
-                                    .ootd(ootd)
+                                    .notificationSender(user)
+                                    .notificationReceiver(ootd.getUser())
+                                    .targetId(ootd.getId())
+                                    .notificationType(OOTD_LIKE)
                                     .build());
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
@@ -192,13 +191,14 @@ public class OotdService {
                 .build());
 
         userFcmToken.ifPresent(fcmToken -> {
-                    OotdCommentNotification notification = ootdCommentNotificationRepository.save(
-                            OotdCommentNotification.builder()
+                    Notification notification = notificationRepository.save(
+                            Notification.builder()
                                     .title(user.getNickname() + "님이 " + ootd.getUser() + "님의 게시물에 댓글을 남겼습니다.")
                                     .bodyMessage(comment.getContent())
-                                    .commentWriter(user)
-                                    .commentReceiver(comment.getUser())
-                                    .ootd(ootd)
+                                    .notificationSender(user)
+                                    .notificationReceiver(comment.getUser())
+                                    .targetId(ootd.getId())
+                                    .notificationType(OOTD_COMMENT)
                                     .build());
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }

@@ -4,8 +4,8 @@ import com.itsuda.perfume.dto.response.PageInfoDto;
 
 import java.util.List;
 
-public record UserNotifications(
-        List<UserNotification> dataList,
+public record UserNotificationsDto(
+        List<UserNotificationDto> dataList,
         PageInfoDto pageInfo
 ) {
 }

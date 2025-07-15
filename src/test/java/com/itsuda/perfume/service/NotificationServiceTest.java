@@ -6,7 +6,7 @@ import com.itsuda.perfume.domain.type.EProvider;
 import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.NotificationType;
-import com.itsuda.perfume.dto.response.notification.UserNotifications;
+import com.itsuda.perfume.dto.response.notification.UserNotificationsDto;
 import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -63,10 +63,10 @@ class NotificationServiceTest {
         Notification notification6 = notificationRepository.save(createNotification("6", sender, receiver, 1L, NotificationType.OOTD_COMMENT_LIKE));
 
         // when
-        UserNotifications userNotifications = notificationService.getAllNotificationsByUserId(receiver.getId(), 0, 6);
+        UserNotificationsDto userNotificationsDto = notificationService.getAllNotificationsByUserId(receiver.getId(), 0, 6);
 
         // then
-        assertThat(userNotifications.dataList()).hasSize(6)
+        assertThat(userNotificationsDto.dataList()).hasSize(6)
                 .extracting("title")
                 .containsExactly(notification6.getTitle(), notification5.getTitle(), notification4.getTitle(),
                         notification3.getTitle(), notification2.getTitle(), notification1.getTitle());

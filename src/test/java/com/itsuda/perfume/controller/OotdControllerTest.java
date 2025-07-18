@@ -64,7 +64,7 @@ class OotdControllerTest {
         // when // then
         mockMvc.perform(
                         MockMvcRequestBuilders.get("/api/v1/ootds")
-                                .queryParam("order", "NEWEST")
+                                .queryParam("order", "NEWEST_DESCENDING")
                                 .queryParam("page", "0")
                                 .queryParam("size", "3")
                 )
@@ -321,7 +321,19 @@ class OotdControllerTest {
                 .andExpect(jsonPath("$.result").value("1200"));
     }
 
-    @DisplayName("자유게시판의 게시글 ID에 달린 댓글을 조회한다.")
+    @DisplayName("OOTD 게시글을 아이디를 기반으로 삭제한다.")
+    @Test
+    void deleteOotdByOotdId() throws Exception {
+        // given
+        Mockito.doNothing().when(ootdService).deleteOotdByOotdId(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/ootds/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("OOTD에 달린 댓글을 조회한다.")
     @Test
     void getComments() throws Exception {
         // given
@@ -330,6 +342,18 @@ class OotdControllerTest {
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/ootds/1/comments"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("OOTD에 달린 댓글을 삭제한다.")
+    @Test
+    void deleteOotdComment() throws Exception {
+        // given
+        Mockito.doNothing().when(ootdService).deleteOotdComment(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/ootds/1/comments/1").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result").value("1200"));
     }

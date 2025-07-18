@@ -20,7 +20,6 @@ import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.dto.response.post.UserInfoDto;
-import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.PostCommentNotificationRepository;
@@ -43,9 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUNT_POST;
+import static com.itsuda.perfume.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -71,19 +68,19 @@ public class PostService {
 
         if (postOrderType.equals(PostOrderType.NEWEST_DESCENDING)) {
             Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            posts = postRepository.findAll(pageable);
+            posts = postRepository.findAllByDeletedAtIsNull(pageable);
             postDtos = posts.stream().map(PostDto::from).toList();
         } else if (postOrderType.equals(PostOrderType.NEWEST_ASCENDING)) {
             Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-            posts = postRepository.findAll(pageable);
+            posts = postRepository.findAllByDeletedAtIsNull(pageable);
             postDtos = posts.stream().map(PostDto::from).toList();
         } else if (postOrderType.equals(PostOrderType.POPULAR_DESCENDING)) {
             Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").descending());
-            posts = postRepository.findAll(pageable);
+            posts = postRepository.findAllByDeletedAtIsNull(pageable);
             postDtos = posts.stream().map(PostDto::from).toList();
         } else if (postOrderType.equals(PostOrderType.POPULAR_ASCENDING)) {
             Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").ascending());
-            posts = postRepository.findAll(pageable);
+            posts = postRepository.findAllByDeletedAtIsNull(pageable);
             postDtos = posts.stream().map(PostDto::from).toList();
         }
 
@@ -103,23 +100,60 @@ public class PostService {
     }
 
     public PostDetailDto getPostDetailByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
         User user = post.getUser();
 
         return new PostDetailDto(PostInfoDto.from(post), UserInfoDto.from(user));
     }
 
+    @Transactional
+    public void deletePostByPostId(Long postId, Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!post.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_POST_OWNER_DELETE);
+        }
+
+        postRepository.delete(post);
+    }
+
     public CommentsDto getCommentsByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
         List<Comment> comments = commentRepository.findAllByPostAndParentCommentIsNull(post);
 
         return CommentsDto.from(comments);
     }
 
+    @Transactional
+    public void deletePostComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_COMMENT_OWNER_DELETE);
+        }
+
+        commentRepository.delete(comment);
+    }
+
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
     public void sendLikeToPost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
 
@@ -148,7 +182,10 @@ public class PostService {
 
     @Transactional
     public PostCommentDto writeCommentToPost(Long postId, Long userId, Long commentId, String content) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
@@ -180,6 +217,9 @@ public class PostService {
     @Transactional
     public void sendLikeToPostComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);

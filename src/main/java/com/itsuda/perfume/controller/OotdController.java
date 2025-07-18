@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -69,6 +70,13 @@ public class OotdController {
         return new ResponseDto<>(ootdService.getOotdDetailByOotdId(ootdId, userId));
     }
 
+    @Operation(summary = "OOTD 삭제", description = "OOTD ID에 맞는 게시글을 삭제합니다.")
+    @DeleteMapping("/{ootdId}")
+    public ResponseDto<Void> deleteOotdByOotdId(@UserId Long userId, @PathVariable Long ootdId) {
+        ootdService.deleteOotdByOotdId(ootdId, userId);
+        return new ResponseDto<>(null);
+    }
+
     @Operation(summary = "OOTD 좋아요", description = "OOTD 게시글에 좋아요를 요청합니다.")
     @PostMapping("/{ootdId}/like")
     public ResponseDto<Void> likeOotdByOotdId(@UserId Long userId, @PathVariable Long ootdId) {
@@ -89,6 +97,13 @@ public class OotdController {
             @PathVariable Long ootdId, @Validated @RequestBody OotdCommentRequestDto postComment) {
         return new ResponseDto<>(ootdService.writeCommentToOotd(ootdId, userId,
                 postComment.commentId(), postComment.comment()));
+    }
+
+    @Operation(summary = "OOTD 댓글 삭제", description = "OOTD 댓글을 삭제합니다.")
+    @DeleteMapping("/{ootdId}/comments/{commentId}")
+    public ResponseDto<Void> deleteOotdCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
+        ootdService.deleteOotdComment(userId, commentId);
+        return new ResponseDto<>(null);
     }
 
     @Operation(summary = "OOTD 댓글 좋아요", description = "OOTD 게시글의 댓글에 좋아요를 요청합니다.")

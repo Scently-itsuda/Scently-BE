@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -54,6 +55,13 @@ public class PostController {
         return new ResponseDto<>(postService.getPostDetailByPostId(postId));
     }
 
+    @Operation(summary = "자유게시글 삭제", description = "자유게시판에서 게시글 ID에 맞는 게시글을 삭제합니다.")
+    @DeleteMapping("/{postId}")
+    public ResponseDto<Void> deletePostByPostId(@UserId Long userId, @PathVariable Long postId) {
+        postService.deletePostByPostId(postId, userId);
+        return new ResponseDto<>(null);
+    }
+
     @Operation(summary = "자유게시글 좋아요", description = "자유게시판 게시글에 좋아요를 요청합니다.")
     @PostMapping("/{postId}/like")
     public ResponseDto<Void> likePostByPostId(@UserId Long userId, @PathVariable Long postId) {
@@ -73,6 +81,13 @@ public class PostController {
             @UserId Long userId, @PathVariable Long postId, @Valid @RequestBody PostCommentRequestDto postComment) {
         return new ResponseDto<>(postService.writeCommentToPost(postId, userId,
                 postComment.commentId(), postComment.comment()));
+    }
+
+    @Operation(summary = "자유게시글 댓글 삭제", description = "자유게시글의 댓글 ID에 맞는 댓글을 삭제합니다.")
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseDto<Void> deletePostCommentByCommentId(@UserId Long userId, @PathVariable Long commentId) {
+        postService.deletePostComment(commentId, userId);
+        return new ResponseDto<>(null);
     }
 
     @Operation(summary = "자유게시글 댓글 좋아요", description = "자유게시글의 댓글에 좋아요를 요청합니다.")

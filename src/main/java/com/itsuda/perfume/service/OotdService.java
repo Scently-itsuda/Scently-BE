@@ -36,7 +36,9 @@ import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.util.S3Util;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,8 +61,6 @@ import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
 @Transactional(readOnly = true)
 public class OotdService {
 
-    private final FcmService fcmService;
-
     private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
     private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
     private final UserLikeCommentRepository userLikeCommentRepository;
@@ -74,6 +74,11 @@ public class OotdService {
     private final OotdRepository ootdRepository;
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
+    private final FcmService fcmService;
+    private final S3Util s3Util;
+
+    @Value("${cloud.aws.s3.save-path.ootd-image}")
+    private String ootdImageSavePath;
 
     // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
@@ -113,13 +118,17 @@ public class OotdService {
                 .volume(volume)
                 .user(user)
                 .content(content).build());
-        ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
+
+        List<OotdImage> ootdImages = ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
                 .ootd(ootd)
                 .originName(image.getOriginalFilename())
                 .saveName(UUID.randomUUID().toString())
                 .sequence(atomicInt.getAndIncrement()).build()).toList());
+        s3Util.uploadFiles(images, ootdImageSavePath, ootdImages.stream().map(OotdImage::getSaveName).toList());
+
         ootdPerfumeRepository.saveAll(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd)
                 .perfume(perfume).build()).toList());
+
         List<Tag> savedTags = tagRepository.saveAll(tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList());
 
         ootdTagRepository.saveAll(savedTags.stream().map(tag -> OotdTag.builder().ootd(ootd).tag(tag).build()).toList());

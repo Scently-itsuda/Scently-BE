@@ -30,7 +30,7 @@ public class Report {
 
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
-    private ReportTargetType targetType;
+    private ReportTargetType reportTargetType;
 
     @Column(nullable = false)
     private ReportType reportType;
@@ -39,14 +39,14 @@ public class Report {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User reportUser;
+    private User reporter;
 
     @Builder
-    private Report(Long targetId, ReportTargetType targetType, ReportType reportType, String otherReason, User reportUser) {
+    private Report(Long targetId, ReportTargetType reportTargetType, ReportType reportType, String otherReason, User reporter) {
         this.targetId = targetId;
-        this.targetType = targetType;
+        this.reportTargetType = reportTargetType;
         this.reportType = reportType;
         this.otherReason = otherReason;
-        this.reportUser = reportUser;
+        this.reporter = reporter;
     }
 }

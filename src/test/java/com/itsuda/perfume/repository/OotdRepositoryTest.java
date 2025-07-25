@@ -154,7 +154,7 @@ class OotdRepositoryTest {
         em.clear();
 
         // when
-        Ootd findOotd = ootdRepository.findById(ootd.getId()).get();
+        Ootd findOotd = ootdRepository.findByIdWithOotdImagesAndOotdTags(ootd.getId()).get();
         List<OotdImage> ootdImages = findOotd.getOotdImages();
 
         // then

@@ -230,7 +230,7 @@ class OotdServiceTest {
         CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, List.of(perfume.getId()), mockMultipartFiles);
 
         // then
-        Optional<Ootd> ootd = ootdRepository.findById(result.ootdId());
+        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId());
         assertThat(ootd).isPresent();
         assertThat(ootd.get()).extracting("content", "user").contains(content, user);
     }
@@ -251,7 +251,7 @@ class OotdServiceTest {
         em.clear();
 
         // then
-        Ootd ootd = ootdRepository.findById(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
         assertThat(ootd.getOotdTags()).extracting(ootdTag -> ootdTag.getTag().getName())
                 .contains("2025", "향수", "느좋");
     }
@@ -274,7 +274,7 @@ class OotdServiceTest {
                 perfumes.stream().map(Perfume::getId).toList(), mockMultipartFiles);
 
         // then
-        Ootd ootd = ootdRepository.findById(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
         assertThat(ootdPerfumeRepository.findByOotd(ootd)).extracting("perfume")
                 .containsAll(perfumes);
     }
@@ -444,7 +444,7 @@ class OotdServiceTest {
 
         // then
         assertThat(notifications).hasSize(1);
-        assertThat(notifications).extracting("commentWriter").containsExactly(user);
+        assertThat(notifications).extracting("notificationSender").containsExactly(user);
     }
 
     @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")

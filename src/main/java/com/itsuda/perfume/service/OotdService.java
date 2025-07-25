@@ -126,7 +126,7 @@ public class OotdService {
     }
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
-        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
         boolean isLiked = Optional.ofNullable(userId).map(usId -> {
             User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));

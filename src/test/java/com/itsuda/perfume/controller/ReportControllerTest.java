@@ -3,7 +3,9 @@ package com.itsuda.perfume.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itsuda.perfume.domain.type.ReportType;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
+import com.itsuda.perfume.dto.request.report.PostReportDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
+import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.service.ReportService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,22 +47,54 @@ class ReportControllerTest {
         Mockito.when(reportService.reportOotdByOotdIdAndUserId(any(), anyLong(), anyLong())).thenReturn(result);
 
         // when // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/ootd/1").with(csrf())
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/ootds/1").with(csrf())
                         .content(objectMapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result").value("1200"));
     }
 
-    @DisplayName("신고 사유가 반드시 있어야 한다.")
+    @DisplayName("OOTD 신고 사유가 반드시 있어야 한다.")
     @Test
-    void reportMustHaveReportType() throws Exception {
+    void ootdReportMustHaveReportType() throws Exception {
         // given
         OotdReportDto request = new OotdReportDto(null, "스팸이네요");
         ReportedOotdDto result = new ReportedOotdDto(null);
         Mockito.when(reportService.reportOotdByOotdIdAndUserId(any(), anyLong(), anyLong())).thenReturn(result);
 
         // when // then
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/ootd/1").with(csrf())
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/ootds/1").with(csrf())
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.result").value("1400"))
+                .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
+                .andExpect(jsonPath("$.message").value("신고 사유가 있어야 합니다"));
+    }
+
+    @DisplayName("자유게시글을 신고할 수 있다.")
+    @Test
+    void reportPostByPostId() throws Exception {
+        // given
+        PostReportDto request = new PostReportDto(ReportType.SPAM_AD, "스팸이네요");
+        ReportedPostDto result = new ReportedPostDto(null);
+        Mockito.when(reportService.reportPostByPostIdAndUserId(any(), anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/posts/1").with(csrf())
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("자유게시글 신고 사유가 반드시 있어야 한다.")
+    @Test
+    void postReportMustHaveReportType() throws Exception {
+        // given
+        PostReportDto request = new PostReportDto(null, "스팸이네요");
+        ReportedPostDto result = new ReportedPostDto(null);
+        Mockito.when(reportService.reportPostByPostIdAndUserId(any(), anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/posts/1").with(csrf())
                         .content(objectMapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result").value("1400"))

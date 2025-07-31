@@ -2,7 +2,9 @@ package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
+import com.itsuda.perfume.dto.request.report.PostReportDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
+import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,5 +30,12 @@ public class ReportController {
     public ResponseDto<ReportedOotdDto> reportOotdByOotdId(
             @RequestBody @Valid OotdReportDto ootdReportDto, @PathVariable Long ootdId, @UserId Long userId) {
         return new ResponseDto<>(reportService.reportOotdByOotdIdAndUserId(ootdReportDto, ootdId, userId));
+    }
+
+    @Operation(summary = "자유게시글 신고", description = "자유게시글을 신고합니다.")
+    @PostMapping("/posts/{postId}")
+    public ResponseDto<ReportedPostDto> reportPostByPostId(
+            @RequestBody @Valid PostReportDto postReportDto, @PathVariable Long postId, @UserId Long userId) {
+        return new ResponseDto<>(reportService.reportPostByPostIdAndUserId(postReportDto, postId, userId));
     }
 }

@@ -1,7 +1,7 @@
 package com.itsuda.perfume.service;
 
-import com.google.firebase.database.core.Repo;
 import com.itsuda.perfume.domain.Ootd;
+import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.Report;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.EProvider;
@@ -10,13 +10,14 @@ import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.ReportTargetType;
 import com.itsuda.perfume.domain.type.ReportType;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
+import com.itsuda.perfume.dto.request.report.PostReportDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
-import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.OotdRepository;
+import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.ReportRepository;
 import com.itsuda.perfume.repository.UserRepository;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,8 @@ class ReportServiceTest {
     private ReportRepository reportRepository;
 
     private User user;
+    @Autowired
+    private PostRepository postRepository;
 
     @BeforeEach
     void setUp() {
@@ -93,6 +96,45 @@ class ReportServiceTest {
                 .extracting("errorCode").isEqualTo(ALREADY_REPORTED_OOTD);
     }
 
+    @DisplayName("신고자, 자유게시글 ID, 신고 사유를 통해 자유게시글을 신고할 수 있다.")
+    @Test
+    void reportPostByReporterAndPostIdAndReportType() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+
+        // when
+        ReportedPostDto reportedPostDto = reportService.reportPostByPostIdAndUserId(new PostReportDto(ReportType.SPAM_AD, null),
+                post.getId(), user.getId());
+
+        // then
+        assertThat(reportRepository.existsById(reportedPostDto.reportId())).isTrue();
+    }
+
+    @DisplayName("존재하지 않는 자유게시글은 신고할 수 없다.")
+    @Test
+    void cannotReportNotExistPost() {
+        // given
+        Post post = createPost(0, user);
+
+        // when // then
+        assertThatThrownBy(() -> reportService.reportPostByPostIdAndUserId(new PostReportDto(ReportType.SPAM_AD, null),
+                Optional.ofNullable(post.getId()).orElse(0L), user.getId())).isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(NOT_FOUND_POST);
+    }
+
+    @DisplayName("신고자가 이미 신고한 자유게시글은 다시 신고할 수 없다.")
+    @Test
+    void cannotReportAlreadyReportedPost() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        reportRepository.save(createReport(user, ReportType.SPAM_AD, ReportTargetType.POST, post.getId(), null));
+
+        // when // then
+        assertThatThrownBy(() -> reportService.reportPostByPostIdAndUserId(new PostReportDto(ReportType.SPAM_AD, null),
+                post.getId(), user.getId())).isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ALREADY_REPORTED_POST);
+    }
+
     private static Report createReport(User user, ReportType reportType, ReportTargetType reportTargetType, Long targetId, String otherReason) {
         return Report.builder()
                 .reporter(user)
@@ -124,6 +166,15 @@ class ReportServiceTest {
                 .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
+                .user(user)
+                .build();
+    }
+
+    private static Post createPost(int number, User user) {
+        return Post.builder()
+                .title("test title" + number)
+                .content("test content" + number)
+                .likeCount(number)
                 .user(user)
                 .build();
     }

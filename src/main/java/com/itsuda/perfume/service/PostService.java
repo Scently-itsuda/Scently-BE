@@ -9,7 +9,6 @@ import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikePost;
-import com.itsuda.perfume.domain.type.NotificationType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
@@ -45,7 +44,7 @@ import java.util.Optional;
 import static com.itsuda.perfume.domain.type.NotificationType.*;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
 import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUNT_POST;
+import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_POST;
 
 @Service
 @RequiredArgsConstructor
@@ -102,14 +101,14 @@ public class PostService {
     }
 
     public PostDetailDto getPostDetailByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_POST));
         User user = post.getUser();
 
         return new PostDetailDto(PostInfoDto.from(post), UserInfoDto.from(user));
     }
 
     public CommentsDto getCommentsByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_POST));
         List<Comment> comments = commentRepository.findAllByPostAndParentCommentIsNull(post);
 
         return CommentsDto.from(comments);
@@ -118,7 +117,7 @@ public class PostService {
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
     public void sendLikeToPost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
 
@@ -148,7 +147,7 @@ public class PostService {
 
     @Transactional
     public PostCommentDto writeCommentToPost(Long postId, Long userId, Long commentId, String content) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUNT_POST));
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);

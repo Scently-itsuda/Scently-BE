@@ -24,7 +24,7 @@ public class ReportController {
     private final ReportService reportService;
 
     @Operation(summary = "OOTD 신고", description = "OOTD 게시글을 신고합니다.")
-    @PostMapping("/ootd/{ootdId}")
+    @PostMapping("/ootds/{ootdId}")
     public ResponseDto<ReportedOotdDto> reportOotdByOotdId(
             @RequestBody @Valid OotdReportDto ootdReportDto, @PathVariable Long ootdId, @UserId Long userId) {
         return new ResponseDto<>(reportService.reportOotdByOotdIdAndUserId(ootdReportDto, ootdId, userId));

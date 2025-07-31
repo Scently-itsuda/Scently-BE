@@ -14,7 +14,7 @@ public enum ErrorCode {
     NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
-    NOT_FOUNT_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    NOT_FOUND_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
 
     // Bad Request Error
     NOT_END_POINT("1400", HttpStatus.BAD_REQUEST, "존재하지 않는 엔드포인트입니다"),
@@ -41,6 +41,7 @@ public enum ErrorCode {
     EMPTY_OOTD_CONTENT("1400", HttpStatus.BAD_REQUEST, "OOTD의 내용은 공백이 아닌 글자가 있어야합니다"),
     FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
     ALREADY_REPORTED_OOTD("1400", HttpStatus.BAD_REQUEST, "이미 신고한 OOTD입니다"),
+    ALREADY_REPORTED_POST("1400", HttpStatus.BAD_REQUEST, "이미 신고한 자유게시글입니다"),
     NOT_EXIST_REPORT_TYPE("1400", HttpStatus.BAD_REQUEST, "신고 사유가 있어야 합니다"),
 
     // Server, File Up/DownLoad Error

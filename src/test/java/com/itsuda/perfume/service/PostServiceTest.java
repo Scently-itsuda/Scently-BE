@@ -267,7 +267,7 @@ class PostServiceTest {
         // then
         assertThatThrownBy(() -> postService.getPostDetailByPostId(savedPost.getId() + 1))
                 .isInstanceOf(RestApiException.class)
-                .extracting("errorCode").isEqualTo(ErrorCode.NOT_FOUNT_POST);
+                .extracting("errorCode").isEqualTo(ErrorCode.NOT_FOUND_POST);
     }
 
     @DisplayName("자유게시판의 게시글에 달린 댓글들을 모두 조회한다.")

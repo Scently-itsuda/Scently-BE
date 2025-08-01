@@ -6,14 +6,17 @@ import com.itsuda.perfume.domain.type.ReportTargetType;
 import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.request.report.ReviewReportDto;
 import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
+import com.itsuda.perfume.dto.response.report.ReportedReviewDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.ReportRepository;
+import com.itsuda.perfume.repository.ReviewRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ public class ReportService {
     private final PostRepository postRepository;
     private final OotdRepository ootdRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final ReportRepository reportRepository;
     private final CommentRepository commentRepository;
 
@@ -82,11 +86,29 @@ public class ReportService {
 
         Report report = reportRepository.save(Report.builder().reporter(user)
                 .reportType(commentReportDto.reportType())
-                .otherReason(commentReportDto.otherReason())
                 .reportTargetType(ReportTargetType.COMMENT)
                 .targetId(commentId)
                 .otherReason(commentReportDto.otherReason())
                 .build());
         return new ReportedCommentDto(report.getId());
+    }
+
+    @Transactional
+    public ReportedReviewDto reportReviewByReviewId(ReviewReportDto reviewReportDto, Long reviewId, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!reviewRepository.existsById(reviewId)) {
+            throw new RestApiException(NOT_FOUND_REVIEW);
+        }
+        if (reportRepository.existsByReporterAndReportTargetTypeAndTargetId(user, ReportTargetType.REVIEW, reviewId)) {
+            throw new RestApiException(ALREADY_REPORTED_REVIEW);
+        }
+
+        Report report = reportRepository.save(Report.builder().reporter(user)
+                .reportType(reviewReportDto.reportType())
+                .reportTargetType(ReportTargetType.REVIEW)
+                .targetId(reviewId)
+                .otherReason(reviewReportDto.otherReason())
+                .build());
+        return new ReportedReviewDto(report.getId());
     }
 }

@@ -2,6 +2,7 @@ package com.itsuda.perfume.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
@@ -44,4 +45,17 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "perfume_id")
     private Perfume perfume;
-} 
+
+    @Builder
+    private Review(String content, int score, LocalDateTime createdAt, LocalDateTime modifiedAt, GenderType perfumeGender, int potentialScore, int weight, User user, Perfume perfume) {
+        this.content = content;
+        this.score = score;
+        this.createdAt = createdAt;
+        this.modifiedAt = modifiedAt;
+        this.perfumeGender = perfumeGender;
+        this.potentialScore = potentialScore;
+        this.weight = weight;
+        this.user = user;
+        this.perfume = perfume;
+    }
+}

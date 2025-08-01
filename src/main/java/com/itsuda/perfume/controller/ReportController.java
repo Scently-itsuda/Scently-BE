@@ -4,9 +4,11 @@ import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.request.report.ReviewReportDto;
 import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
+import com.itsuda.perfume.dto.response.report.ReportedReviewDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,5 +49,13 @@ public class ReportController {
             @RequestBody @Valid CommentReportDto commentReportDto, @PathVariable Long commentId, @UserId Long userId
     ) {
         return new ResponseDto<>(reportService.reportCommentByCommentId(commentReportDto, commentId, userId));
+    }
+
+    @Operation(summary = "리뷰 신고", description = "리뷰를 신고합니다.")
+    @PostMapping("/reviews/{reviewId}")
+    public ResponseDto<ReportedReviewDto> reportReviewByReviewId(
+            @RequestBody @Valid ReviewReportDto reviewReportDto, @PathVariable Long reviewId, @UserId Long userId
+    ) {
+        return new ResponseDto<>(reportService.reportReviewByReviewId(reviewReportDto, reviewId, userId));
     }
 }

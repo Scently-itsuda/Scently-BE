@@ -1,8 +1,10 @@
 package com.itsuda.perfume.controller;
 
 import com.itsuda.perfume.annotation.UserId;
+import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.exception.ResponseDto;
@@ -37,5 +39,13 @@ public class ReportController {
     public ResponseDto<ReportedPostDto> reportPostByPostId(
             @RequestBody @Valid PostReportDto postReportDto, @PathVariable Long postId, @UserId Long userId) {
         return new ResponseDto<>(reportService.reportPostByPostIdAndUserId(postReportDto, postId, userId));
+    }
+
+    @Operation(summary = "댓글 신고", description = "댓글을 신고합니다.")
+    @PostMapping("/comments/{commentId}")
+    public ResponseDto<ReportedCommentDto> reportCommentByCommentId(
+            @RequestBody @Valid CommentReportDto commentReportDto, @PathVariable Long commentId, @UserId Long userId
+    ) {
+        return new ResponseDto<>(reportService.reportCommentByCommentId(commentReportDto, commentId, userId));
     }
 }

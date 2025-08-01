@@ -2,8 +2,10 @@ package com.itsuda.perfume.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itsuda.perfume.domain.type.ReportType;
+import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.service.ReportService;
@@ -95,6 +97,38 @@ class ReportControllerTest {
 
         // when // then
         mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/posts/1").with(csrf())
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.result").value("1400"))
+                .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
+                .andExpect(jsonPath("$.message").value("신고 사유가 있어야 합니다"));
+    }
+
+    @DisplayName("댓글을 신고할 수 있다.")
+    @Test
+    void reportCommentByCommentId() throws Exception {
+        // given
+        CommentReportDto request = new CommentReportDto(ReportType.SPAM_AD, "스팸이네요");
+        ReportedCommentDto result = new ReportedCommentDto(null);
+        Mockito.when(reportService.reportCommentByCommentId(any(), anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/comments/1").with(csrf())
+                        .content(objectMapper.writeValueAsString(request))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
+    @DisplayName("댓글 신고 사유가 반드시 있어야 한다.")
+    @Test
+    void commentReportMustHaveReportType() throws Exception {
+        // given
+        CommentReportDto request = new CommentReportDto(null, "스팸이네요");
+        ReportedCommentDto result = new ReportedCommentDto(null);
+        Mockito.when(reportService.reportCommentByCommentId(any(), anyLong(), anyLong())).thenReturn(result);
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/reports/comments/1").with(csrf())
                         .content(objectMapper.writeValueAsString(request))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.result").value("1400"))

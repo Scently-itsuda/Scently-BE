@@ -42,6 +42,7 @@ public enum ErrorCode {
     FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
     ALREADY_REPORTED_OOTD("1400", HttpStatus.BAD_REQUEST, "이미 신고한 OOTD입니다"),
     ALREADY_REPORTED_POST("1400", HttpStatus.BAD_REQUEST, "이미 신고한 자유게시글입니다"),
+    ALREADY_REPORTED_COMMENT("1400", HttpStatus.BAD_REQUEST, "이미 신고한 댓글입니다"),
     NOT_EXIST_REPORT_TYPE("1400", HttpStatus.BAD_REQUEST, "신고 사유가 있어야 합니다"),
 
     // Server, File Up/DownLoad Error

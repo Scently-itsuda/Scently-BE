@@ -1,5 +1,6 @@
 package com.itsuda.perfume.service;
 
+import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.Report;
@@ -9,11 +10,14 @@ import com.itsuda.perfume.domain.type.ERole;
 import com.itsuda.perfume.domain.type.GenderType;
 import com.itsuda.perfume.domain.type.ReportTargetType;
 import com.itsuda.perfume.domain.type.ReportType;
+import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.exception.RestApiException;
+import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.ReportRepository;
@@ -48,9 +52,13 @@ class ReportServiceTest {
     @Autowired
     private ReportRepository reportRepository;
 
-    private User user;
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    private User user;
 
     @BeforeEach
     void setUp() {
@@ -135,6 +143,48 @@ class ReportServiceTest {
                 .extracting("errorCode").isEqualTo(ALREADY_REPORTED_POST);
     }
 
+    @DisplayName("신고자, 댓글 ID, 신고 사유를 통해 댓글을 신고할 수 있다.")
+    @Test
+    void reportCommentByReporterAndCommentIdAndReportType() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createPostComment(0, null, post, user));
+
+        // when
+        ReportedCommentDto reportedCommentDto = reportService.reportCommentByCommentId(new CommentReportDto(ReportType.SPAM_AD, null),
+                comment.getId(), user.getId());
+
+        // then
+        assertThat(reportRepository.existsById(reportedCommentDto.reportId())).isTrue();
+    }
+
+    @DisplayName("존재하지 않는 댓글은 신고할 수 없다.")
+    @Test
+    void cannotReportNotExistComment() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = createPostComment(0, null, post, user);
+
+        // when // then
+        assertThatThrownBy(() -> reportService.reportCommentByCommentId(new CommentReportDto(ReportType.SPAM_AD, null),
+                Optional.ofNullable(comment.getId()).orElse(0L), user.getId())).isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(NOT_FOUND_COMMENT);
+    }
+
+    @DisplayName("신고자가 이미 신고한 댓글은 다시 신고할 수 없다.")
+    @Test
+    void cannotReportAlreadyReportedComment() {
+        // given
+        Post post = postRepository.save(createPost(0, user));
+        Comment comment = commentRepository.save(createPostComment(0, null, post, user));
+        reportRepository.save(createReport(user, ReportType.SPAM_AD, ReportTargetType.COMMENT, comment.getId(), null));
+
+        // when // then
+        assertThatThrownBy(() -> reportService.reportCommentByCommentId(new CommentReportDto(ReportType.SPAM_AD, null),
+                comment.getId(), user.getId())).isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ALREADY_REPORTED_COMMENT);
+    }
+
     private static Report createReport(User user, ReportType reportType, ReportTargetType reportTargetType, Long targetId, String otherReason) {
         return Report.builder()
                 .reporter(user)
@@ -175,6 +225,26 @@ class ReportServiceTest {
                 .title("test title" + number)
                 .content("test content" + number)
                 .likeCount(number)
+                .user(user)
+                .build();
+    }
+
+    private static Comment createOotdComment(int number, Comment parent, Ootd ootd, User user) {
+        return Comment.builder()
+                .content("test content" + number)
+                .likeCount(number)
+                .parentComment(parent)
+                .ootd(ootd)
+                .user(user)
+                .build();
+    }
+
+    private static Comment createPostComment(int number, Comment parent, Post post, User user) {
+        return Comment.builder()
+                .content("test content" + number)
+                .likeCount(number)
+                .parentComment(parent)
+                .post(post)
                 .user(user)
                 .build();
     }

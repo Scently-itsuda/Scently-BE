@@ -3,11 +3,14 @@ package com.itsuda.perfume.service;
 import com.itsuda.perfume.domain.Report;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.type.ReportTargetType;
+import com.itsuda.perfume.dto.request.report.CommentReportDto;
 import com.itsuda.perfume.dto.request.report.OotdReportDto;
 import com.itsuda.perfume.dto.request.report.PostReportDto;
+import com.itsuda.perfume.dto.response.report.ReportedCommentDto;
 import com.itsuda.perfume.dto.response.report.ReportedOotdDto;
 import com.itsuda.perfume.dto.response.report.ReportedPostDto;
 import com.itsuda.perfume.exception.RestApiException;
+import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PostRepository;
 import com.itsuda.perfume.repository.ReportRepository;
@@ -27,6 +30,7 @@ public class ReportService {
     private final OotdRepository ootdRepository;
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public ReportedOotdDto reportOotdByOotdIdAndUserId(OotdReportDto ootdReportDto, Long ootdId, Long userId) {
@@ -40,10 +44,10 @@ public class ReportService {
 
         Report report = reportRepository.save(Report.builder().reporter(user)
                 .reportType(ootdReportDto.reportType())
-                .otherReason(ootdReportDto.otherReason())
                 .reportTargetType(ReportTargetType.OOTD)
                 .targetId(ootdId)
-                .otherReason(ootdReportDto.otherReason()).build());
+                .otherReason(ootdReportDto.otherReason())
+                .build());
         return new ReportedOotdDto(report.getId());
     }
 
@@ -59,10 +63,30 @@ public class ReportService {
 
         Report report = reportRepository.save(Report.builder().reporter(user)
                 .reportType(postReportDto.reportType())
-                .otherReason(postReportDto.otherReason())
                 .reportTargetType(ReportTargetType.POST)
                 .targetId(postId)
-                .otherReason(postReportDto.otherReason()).build());
+                .otherReason(postReportDto.otherReason())
+                .build());
         return new ReportedPostDto(report.getId());
+    }
+
+    @Transactional
+    public ReportedCommentDto reportCommentByCommentId(CommentReportDto commentReportDto, Long commentId, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!commentRepository.existsById(commentId)) {
+            throw new RestApiException(NOT_FOUND_COMMENT);
+        }
+        if (reportRepository.existsByReporterAndReportTargetTypeAndTargetId(user, ReportTargetType.COMMENT, commentId)) {
+            throw new RestApiException(ALREADY_REPORTED_COMMENT);
+        }
+
+        Report report = reportRepository.save(Report.builder().reporter(user)
+                .reportType(commentReportDto.reportType())
+                .otherReason(commentReportDto.otherReason())
+                .reportTargetType(ReportTargetType.COMMENT)
+                .targetId(commentId)
+                .otherReason(commentReportDto.otherReason())
+                .build());
+        return new ReportedCommentDto(report.getId());
     }
 }

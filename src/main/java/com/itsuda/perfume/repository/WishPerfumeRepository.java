@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface WishPerfumeRepository extends JpaRepository<WishPerfume, Long> {
 
     Optional<WishPerfume> findByPerfumeAndCustomer(Perfume perfume, User customer);
+
 }

@@ -139,6 +139,18 @@ class PostControllerTest {
 
     }
 
+    @DisplayName("자유게시판에 게시글 ID에 맞는 게시글을 삭제한다.")
+    @Test
+    void deletePostByPostId() throws Exception {
+        // given
+        Mockito.doNothing().when(postService).deletePostByPostId(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
+    }
+
     @DisplayName("자유게시판의 게시글 ID에 달린 댓글을 조회한다.")
     @Test
     void getComments() throws Exception {
@@ -177,6 +189,18 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.result").value("1400"))
                 .andExpect(jsonPath("$.error").value(HttpStatus.BAD_REQUEST.toString()))
                 .andExpect(jsonPath("$.message").value("댓글은 공백이 아닌 1자 이상이 포함되어야 합니다"));
+    }
+
+    @DisplayName("자유게시글의 댓글ID에 맞는 댓글 삭제를 요청한다.")
+    @Test
+    void deletePostCommentByCommentId() throws Exception {
+        // given
+        Mockito.doNothing().when(postService).deletePostComment(anyLong(), anyLong());
+
+        // when // then
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/posts/1/comments/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result").value("1200"));
     }
 
     @DisplayName("자유게시글의 댓글에 좋아요를 눌러서 좋아요를 요청한다.")

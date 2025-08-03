@@ -13,11 +13,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
 
 import java.util.List;
 
 @Entity
 @Getter
+@SQLDelete(sql = "UPDATE comment SET deleted_at = NOW(), content = '삭제된 댓글입니다', like_count = 0 WHERE id = ?")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends ModifiableBaseEntity {
 

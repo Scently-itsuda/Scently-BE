@@ -20,6 +20,9 @@ import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
+import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
+import com.itsuda.perfume.exception.ErrorCode;
+import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
@@ -53,6 +56,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -480,6 +484,95 @@ class OotdServiceTest {
         assertThat(userLikeCommentRepository.existsByUserAndComment(user, comment)).isFalse();
     }
 
+    @DisplayName("사용자가 좋아요를 누른 OOTD만 확인할 수 있다.")
+    @Test
+    void getUserLikesOotds() {
+        // given
+        setMockingTime(20);
+        Ootd savedOotd1 = ootdRepository.save(createOotd(1));
+        ootdImageRepository.save(createOotdImage(0, savedOotd1));
+        ootdService.sendLikeToOotd(savedOotd1.getId(), user.getId());
+
+        setMockingTime(30);
+        Ootd savedOotd2 = ootdRepository.save(createOotd(2));
+        ootdImageRepository.save(createOotdImage(0, savedOotd2));
+
+        setMockingTime(0);
+        Ootd savedOotd3 = ootdRepository.save(createOotd(3));
+        ootdImageRepository.save(createOotdImage(0, savedOotd3));
+        ootdService.sendLikeToOotd(savedOotd3.getId(), user.getId());
+
+        // when
+        UserLikeOotdsDto result = ootdService.getAllUserLikeOotdsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
+
+        // then
+        assertThat(result.dataList()).hasSize(2)
+                .extracting("ootdId")
+                .contains(savedOotd1.getId(), savedOotd3.getId());
+    }
+
+    @DisplayName("OOTD를 삭제하면 해당 OOTD의 삭제날짜를 확인할 수 있다.")
+    @Test
+    void deletedOotdHasDeletedDate() {
+        // given
+        Ootd savedOotd = ootdRepository.save(createOotd(0));
+
+        // when
+        ootdService.deleteOotdByOotdId(savedOotd.getId(), user.getId());
+        em.flush();
+        em.clear();
+        Ootd result = ootdRepository.findById(savedOotd.getId()).get();
+
+        // then
+        assertThat(result.getDeletedAt()).isNotNull();
+    }
+
+    @DisplayName("OOTD의 작성자만 OOTD를 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeleteOotd() {
+        // given
+        Ootd savedOotd = ootdRepository.save(createOotd(0));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> ootdService.deleteOotdByOotdId(savedOotd.getId(), otherUser.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_OOTD_OWNER_DELETE);
+    }
+
+    @DisplayName("댓글을 삭제하면 해당 댓글의 삭제날짜를 확인할 수 있고 메시지가 삭제된 메시지입니다라고 바뀌며 좋아요는 0이 된다.")
+    @Test
+    void deletedCommentHasDeletedDateAndMessageAndLikeCountIsChanged() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+
+        // when
+        ootdService.deleteOotdComment(user.getId(), comment.getId());
+        em.flush();
+        em.clear();
+        Comment deletedComment = commentRepository.findById(comment.getId()).get();
+
+        // then
+        assertThat(deletedComment.getDeletedAt()).isNotNull();
+        assertThat(deletedComment).extracting("content", "likeCount")
+                .contains("삭제된 댓글입니다", 0);
+    }
+
+    @DisplayName("댓글의 작성자만 댓글을 삭제할 수 있다.")
+    @Test
+    void onlyOwnerCanDeleteComment() {
+        // given
+        Ootd ootd = ootdRepository.save(createOotd(0));
+        Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        User otherUser = userRepository.save(createTestUser(1));
+
+        // when // then
+        assertThatThrownBy(() -> ootdService.deleteOotdComment(otherUser.getId(), comment.getId()))
+                .isInstanceOf(RestApiException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ONLY_COMMENT_OWNER_DELETE);
+    }
+
     private void setMockingTime(int minute) {
         given(dateTimeProvider.getNow())
                 .willReturn(Optional.of(
@@ -516,6 +609,22 @@ class OotdServiceTest {
                 .role(ERole.USER)
                 .serialId("123")
                 .username("test")
+                .build();
+        user.updateBirthDate("2000-05-02");
+        return user;
+    }
+
+    private static User createTestUser(int number) {
+        User user = User.builder()
+                .email(number + "test@test.com")
+                .gender(GenderType.MALE)
+                .imageUrl(number + "test url")
+                .nickname(number + "test nickname")
+                .presentation(number + "test")
+                .provider(EProvider.GOOGLE)
+                .role(ERole.USER)
+                .serialId(number + "123")
+                .username(number + "test")
                 .build();
         user.updateBirthDate("2000-05-02");
         return user;

@@ -6,10 +6,14 @@ import com.itsuda.perfume.domain.PerfumeDetail;
 import com.itsuda.perfume.domain.PerfumeVolume;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.WishPerfume;
+import com.itsuda.perfume.domain.type.PerfumeOrderType;
 import com.itsuda.perfume.dto.request.PerfumeRequestDto;
+import com.itsuda.perfume.dto.request.like.WishPerfumeRequestDto;
+import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.PerfumeAccordDto;
 import com.itsuda.perfume.dto.response.PerfumeDetailDto;
 import com.itsuda.perfume.dto.response.PerfumeListDto;
+import com.itsuda.perfume.dto.response.like.WishPerfumesDto;
 import com.itsuda.perfume.dto.response.perfume.OotdPerfumeDto;
 import com.itsuda.perfume.dto.response.perfume.OotdPerfumesDto;
 import com.itsuda.perfume.exception.ErrorCode;
@@ -24,6 +28,10 @@ import com.itsuda.perfume.repository.WishPerfumeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -108,5 +116,28 @@ public class PerfumeService {
                     perfume.increaseLikeCount();
                 }
         );
+    }
+
+    public WishPerfumesDto getAllWishPerfumes(WishPerfumeRequestDto wishPerfumeRequestDto, int page, int size, PerfumeOrderType perfumeOrderType, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
+        Pageable pageable = switch (perfumeOrderType) {
+            case REGISTERED_AT_DESCENDING -> PageRequest.of(page, size, Sort.by("registeredAt").descending());
+            case REGISTERED_AT_ASCENDING -> PageRequest.of(page, size, Sort.by("registeredAt").ascending());
+            case POPULAR_DESCENDING -> PageRequest.of(page, size, Sort.by("wishCount").descending());
+            case POPULAR_ASCENDING -> PageRequest.of(page, size, Sort.by("wishCount").ascending());
+            default -> PageRequest.of(page, size, Sort.by("registeredAt").descending());
+        };
+
+        Page<Perfume> wishPerfumes = perfumeRepository.findAllWishPerfumeBySearchOptions(
+                pageable,
+                wishPerfumeRequestDto.getMinPrice(),
+                wishPerfumeRequestDto.getMaxPrice(),
+                wishPerfumeRequestDto.getGenders(),
+                wishPerfumeRequestDto.getAccords(),
+                wishPerfumeRequestDto.getPotentials(),
+                wishPerfumeRequestDto.getBrands(),
+                wishPerfumeRequestDto.getCountries(),
+                user);
+        return WishPerfumesDto.from(wishPerfumes.getContent(), PageInfoDto.from(wishPerfumes));
     }
 }

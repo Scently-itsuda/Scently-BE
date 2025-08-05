@@ -24,6 +24,8 @@ public class S3Util {
     @Value("${cloud.aws.s3.bucket.name}")
     @Setter
     private static String bucket;
+    @Value("${cloud.aws.s3.bucket.expiration-time}")
+    private static Long expirationTime;
     private static AmazonS3 amazonS3;
 
     @Autowired

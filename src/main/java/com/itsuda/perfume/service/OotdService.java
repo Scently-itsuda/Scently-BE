@@ -21,6 +21,7 @@ import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
 import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
+import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
@@ -29,6 +30,7 @@ import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
+import com.itsuda.perfume.repository.OotdRepository.UserLikeOotdInfo;
 import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.TagRepository;
@@ -52,9 +54,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_COMMENT;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_OOTD;
-import static com.itsuda.perfume.exception.ErrorCode.NOT_FOUND_USER;
+import static com.itsuda.perfume.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -138,6 +138,9 @@ public class OotdService {
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
         boolean isLiked = Optional.ofNullable(userId).map(usId -> {
             User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
@@ -147,9 +150,26 @@ public class OotdService {
         return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
     }
 
+    @Transactional
+    public void deleteOotdByOotdId(Long ootdId, Long userId) {
+        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!ootd.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_OOTD_OWNER_DELETE);
+        }
+
+        ootdRepository.delete(ootd);
+    }
+
     public CommentsDto getCommentsByOotdId(Long ootdId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
-        List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNull(ootd);
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
+        List<Comment> comments = commentRepository.findAllByOotdAndParentCommentIsNullAndDeletedAtIsNull(ootd);
 
         return CommentsDto.from(comments);
     }
@@ -158,6 +178,9 @@ public class OotdService {
     @Transactional
     public void sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
 
@@ -187,6 +210,9 @@ public class OotdService {
     @Transactional
     public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long commentId, String content) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_OOTD);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
@@ -216,8 +242,25 @@ public class OotdService {
     }
 
     @Transactional
+    public void deleteOotdComment(Long userId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new RestApiException(ONLY_COMMENT_OWNER_DELETE);
+        }
+
+        commentRepository.delete(comment);
+    }
+
+    @Transactional
     public void sendLikeToOotdComment(Long userId, Long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
@@ -229,5 +272,26 @@ public class OotdService {
 
         userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
         comment.increaseLikeCount();
+    }
+
+    public UserLikeOotdsDto getAllUserLikeOotdsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        Page<UserLikeOotdInfo> userLikeOotdInfos = Page.empty();
+
+        if (ootdOrderType.equals(OotdOrderType.NEWEST_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.NEWEST_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").ascending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_DESCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").descending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_ASCENDING)) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").ascending());
+            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        }
+
+        return UserLikeOotdsDto.from(userLikeOotdInfos.getContent(), PageInfoDto.from(userLikeOotdInfos));
     }
 }

@@ -1,5 +1,11 @@
 package com.itsuda.perfume.service;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
@@ -33,6 +39,7 @@ import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.util.S3Util;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,8 +47,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.http.MediaType;
@@ -49,6 +58,8 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.containers.localstack.LocalStackContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -124,6 +135,35 @@ class OotdServiceTest {
         userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
+    }
+
+    @TestConfiguration
+    public class LocalStackConfig {
+        @Bean
+        public LocalStackContainer localStackContainer() {
+            return new LocalStackContainer().withServices(Service.S3);
+        }
+
+        @Bean
+        public AmazonS3 amazonS3(LocalStackContainer localStackContainer) {
+            AWSCredentials credentials = new BasicAWSCredentials(
+                    localStackContainer.getAccessKey(),
+                    localStackContainer.getSecretKey());
+
+            return AmazonS3ClientBuilder
+                    .standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                    .withEndpointConfiguration(new EndpointConfiguration(
+                            localStackContainer.getEndpointOverride(Service.S3).toString(),
+                            localStackContainer.getRegion()
+                    ))
+                    .build();
+        }
+
+        @Bean
+        public S3Util s3Config(AmazonS3 amazonS3) {
+            return new S3Util(amazonS3);
+        }
     }
 
     @DisplayName("OOTD 게시물들의 썸네일의 정보를 최신순으로 조회한다.")

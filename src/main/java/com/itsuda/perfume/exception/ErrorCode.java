@@ -14,7 +14,8 @@ public enum ErrorCode {
     NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
-    NOT_FOUND_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    NOT_FOUNT_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    NOT_FOUND_FILE_PATH("1404", HttpStatus.NOT_FOUND, "존재하지 않는 파일 경로입니다"),
     NOT_FOUND_REVIEW("1404", HttpStatus.NOT_FOUND, "존재하는 리뷰입니다"),
     DELETED_OOTD("1404", HttpStatus.NOT_FOUND, "이미 삭제된 OOTD 게시글입니다"),
     DELETED_POST("1404", HttpStatus.NOT_FOUND, "이미 삭제된 자유게시글입니다"),
@@ -57,7 +58,7 @@ public enum ErrorCode {
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),
     FILE_UPLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다"),
     FILE_DOWNLOAD("1500", HttpStatus.INTERNAL_SERVER_ERROR, "파일 다운로드에 실패했습니다"),
-    INVALID_FCM_MESSAGE("1500", HttpStatus.INTERNAL_SERVER_ERROR, "푸시 메시지의 제목과 본문이 비어져있습니다."),
+    INVALID_FCM_MESSAGE("1500", HttpStatus.INTERNAL_SERVER_ERROR, "푸시 메시지의 제목과 본문이 비어져있습니다"),
 
     // Access Denied Error
     ACCESS_DENIED_ERROR("1401", HttpStatus.UNAUTHORIZED, "접근이 거부된 토큰입니다"),

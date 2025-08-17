@@ -15,6 +15,7 @@ public enum ErrorCode {
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
     NOT_FOUND_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    NOT_FOUND_REVIEW("1404", HttpStatus.NOT_FOUND, "존재하는 리뷰입니다"),
     DELETED_OOTD("1404", HttpStatus.NOT_FOUND, "이미 삭제된 OOTD 게시글입니다"),
     DELETED_POST("1404", HttpStatus.NOT_FOUND, "이미 삭제된 자유게시글입니다"),
     DELETED_COMMENT("1404", HttpStatus.NOT_FOUND, "이미 삭제된 댓글입니다"),
@@ -46,6 +47,11 @@ public enum ErrorCode {
     ONLY_POST_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "자유게시글 작성자만 자유게시글을 삭제할 수 있습니다."),
     ONLY_COMMENT_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "댓글 작성자만 댓글을 삭제할 수 있습니다."),
     FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
+    ALREADY_REPORTED_OOTD("1400", HttpStatus.BAD_REQUEST, "이미 신고한 OOTD입니다"),
+    ALREADY_REPORTED_POST("1400", HttpStatus.BAD_REQUEST, "이미 신고한 자유게시글입니다"),
+    ALREADY_REPORTED_COMMENT("1400", HttpStatus.BAD_REQUEST, "이미 신고한 댓글입니다"),
+    ALREADY_REPORTED_REVIEW("1400", HttpStatus.BAD_REQUEST, "이미 신고한 리뷰입니다"),
+    NOT_EXIST_REPORT_TYPE("1400", HttpStatus.BAD_REQUEST, "신고 사유가 있어야 합니다"),
 
     // Server, File Up/DownLoad Error
     SERVER_ERROR("1500", HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다"),

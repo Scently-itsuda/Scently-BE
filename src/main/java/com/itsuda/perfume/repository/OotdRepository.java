@@ -11,9 +11,8 @@ import java.util.Optional;
 
 public interface OotdRepository extends JpaRepository<Ootd, Long> {
 
-    @Override
-    @EntityGraph(attributePaths = {"ootdImages", "ootdTags"})
-    Optional<Ootd> findById(Long id);
+    @Query(value = "SELECT o FROM Ootd o JOIN FETCH o.ootdImages WHERE o.id = :ootdId")
+    Optional<Ootd> findByIdWithOotdImagesAndOotdTags(Long ootdId);
 
     @Query(value = "SELECT o.id AS ootdId, oi.save_name AS ootdImageUrl, " +
             "CASE WHEN ulo.id IS NULL THEN FALSE ELSE TRUE END AS isLiked FROM ootd o " +

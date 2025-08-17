@@ -1,8 +1,8 @@
 package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
+import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
-import com.itsuda.perfume.domain.OotdCommentNotification;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.User;
@@ -24,9 +24,8 @@ import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.ErrorCode;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
-import com.itsuda.perfume.repository.OotdCommentNotificationRepository;
+import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
-import com.itsuda.perfume.repository.OotdLikeNotificationRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
@@ -102,16 +101,13 @@ class OotdServiceTest {
     private UserFcmTokenRepository userFcmTokenRepository;
 
     @Autowired
-    private OotdLikeNotificationRepository ootdLikeNotificationRepository;
-
-    @Autowired
-    private OotdCommentNotificationRepository ootdCommentNotificationRepository;
-
-    @Autowired
     private UserLikeCommentRepository userLikeCommentRepository;
 
     @Autowired
     private OotdPerfumeRepository ootdPerfumeRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private EntityManager em;
@@ -238,7 +234,7 @@ class OotdServiceTest {
         CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, List.of(perfume.getId()), mockMultipartFiles);
 
         // then
-        Optional<Ootd> ootd = ootdRepository.findById(result.ootdId());
+        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId());
         assertThat(ootd).isPresent();
         assertThat(ootd.get()).extracting("content", "user").contains(content, user);
     }
@@ -259,7 +255,7 @@ class OotdServiceTest {
         em.clear();
 
         // then
-        Ootd ootd = ootdRepository.findById(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
         assertThat(ootd.getOotdTags()).extracting(ootdTag -> ootdTag.getTag().getName())
                 .contains("2025", "향수", "느좋");
     }
@@ -282,7 +278,7 @@ class OotdServiceTest {
                 perfumes.stream().map(Perfume::getId).toList(), mockMultipartFiles);
 
         // then
-        Ootd ootd = ootdRepository.findById(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
         assertThat(ootdPerfumeRepository.findByOotd(ootd)).extracting("perfume")
                 .containsAll(perfumes);
     }
@@ -400,7 +396,7 @@ class OotdServiceTest {
 
         // then
         assertThat(userLikeOotdRepository.existsByUserAndOotd(user, ootd)).isTrue();
-        assertThat(ootdLikeNotificationRepository.findByLikeReceiver(ootd.getUser())).hasSize(1);
+        assertThat(notificationRepository.findByNotificationReceiver(ootd.getUser())).hasSize(1);
     }
 
     @DisplayName("사용자가 게시글에 최상위 댓글을 단다.")
@@ -448,11 +444,11 @@ class OotdServiceTest {
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
                 comment.getId(), "test comment");
-        List<OotdCommentNotification> notifications = ootdCommentNotificationRepository.findByCommentReceiver(user);
+        List<Notification> notifications = notificationRepository.findByNotificationReceiver(user);
 
         // then
         assertThat(notifications).hasSize(1);
-        assertThat(notifications).extracting("commentWriter").containsExactly(user);
+        assertThat(notifications).extracting("notificationSender").containsExactly(user);
     }
 
     @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")

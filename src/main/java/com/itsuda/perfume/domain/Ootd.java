@@ -3,6 +3,7 @@ package com.itsuda.perfume.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -54,9 +55,11 @@ public class Ootd extends ModifiableBaseEntity {
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdTag> ootdTags = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_OOTD_USER_ID"))
     private User user;
+
+    // ------------------------ 도메인 메서드 ----------------------------
 
     @Builder
     private Ootd(int likeCount, int volume, String content, User user) {

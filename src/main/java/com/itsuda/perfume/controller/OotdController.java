@@ -42,9 +42,9 @@ public class OotdController {
     @Operation(summary = "OOTD 목록 조회", description = "OOTD들을 정렬 순서에 맞게 조회합니다.")
     @GetMapping
     public ResponseDto<OotdMainDto> getOotdThumbnails(
-            @UserId(required = false) Long userId,
-            @RequestParam(required = false, defaultValue = "NEWEST") OotdOrderType order,
-            @RequestParam int page, @RequestParam int size) {
+            @UserId(required = false) Long userId, @RequestParam int page, @RequestParam int size,
+            @RequestParam(required = false, defaultValue = "NEWEST_DESCENDING") OotdOrderType order
+    ) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, order, userId));
     }
 

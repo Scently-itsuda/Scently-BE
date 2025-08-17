@@ -76,32 +76,20 @@ public class OotdService {
     private final S3Util s3Util;
 
     @Value("${cloud.aws.s3.save-path.ootd-image}")
-    private String ootdImageSavePath;
+    private String OOTD_IMAGE_SAVE_PATH;
 
-    // TODO - 추후 전략 패턴 도입
     public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = Page.empty();
-        List<OotdThumbnailDto> ootdThumbnails = List.of();
+        Pageable pageable = PageRequest.of(page, size,
+                switch (ootdOrderType) {
+                    case NEWEST_DESCENDING -> Sort.by("created_at").descending();
+                    case NEWEST_ASCENDING -> Sort.by("created_at").ascending();
+                    case POPULAR_DESCENDING -> Sort.by("like_count").descending();
+                    case POPULAR_ASCENDING -> Sort.by("like_count").ascending();
+                });
 
-        if (ootdOrderType.equals(OotdOrderType.NEWEST_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
-            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
-        } else if (ootdOrderType.equals(OotdOrderType.NEWEST_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").ascending());
-            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
-        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").descending());
-            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
-        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").ascending());
-            ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-            ootdThumbnails = ootdThumbnailInfos.stream().map(OotdThumbnailDto::from).toList();
-        }
+        Page<OotdThumbnailInfo> ootdThumbnails = ootdRepository.findAllIncludingUserLiked(pageable, userId);
 
-        return new OotdMainDto(ootdThumbnails, PageInfoDto.from(ootdThumbnailInfos));
+        return new OotdMainDto(ootdThumbnails.stream().map(OotdThumbnailDto::from).toList(), PageInfoDto.from(ootdThumbnails));
     }
 
     @Transactional
@@ -122,7 +110,7 @@ public class OotdService {
                 .originName(image.getOriginalFilename())
                 .saveName(UUID.randomUUID().toString())
                 .sequence(atomicInt.getAndIncrement()).build()).toList());
-        s3Util.uploadFiles(images, ootdImageSavePath, ootdImages.stream().map(OotdImage::getSaveName).toList());
+        s3Util.uploadFiles(images, OOTD_IMAGE_SAVE_PATH, ootdImages.stream().map(OotdImage::getSaveName).toList());
 
         ootdPerfumeRepository.saveAll(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd)
                 .perfume(perfume).build()).toList());

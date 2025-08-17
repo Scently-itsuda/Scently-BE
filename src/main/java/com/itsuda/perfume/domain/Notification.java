@@ -1,5 +1,6 @@
 package com.itsuda.perfume.domain;
 
+import com.itsuda.perfume.domain.type.NotificationType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -15,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class OotdLikeNotification extends BaseEntity {
+public class Notification extends ModifiableBaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,23 +27,24 @@ public class OotdLikeNotification extends BaseEntity {
     private String bodyMessage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "like_sender_id")
-    private User likeSender;
+    @JoinColumn(name = "notification_sender_id")
+    private User notificationSender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "like_receiver_id")
-    private User likeReceiver;
+    @JoinColumn(name = "notification_receiver_id")
+    private User notificationReceiver;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ootd_id")
-    private Ootd ootd;
+    private Long targetId;
+
+    private NotificationType notificationType;
 
     @Builder
-    private OotdLikeNotification(String title, String bodyMessage, User likeSender, User likeReceiver, Ootd ootd) {
+    private Notification(String title, String bodyMessage, User notificationSender, User notificationReceiver, Long targetId, NotificationType notificationType) {
         this.title = title;
         this.bodyMessage = bodyMessage;
-        this.likeSender = likeSender;
-        this.likeReceiver = likeReceiver;
-        this.ootd = ootd;
+        this.notificationSender = notificationSender;
+        this.notificationReceiver = notificationReceiver;
+        this.targetId = targetId;
+        this.notificationType = notificationType;
     }
 }

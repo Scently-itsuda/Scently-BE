@@ -1,11 +1,5 @@
 package com.itsuda.perfume.service;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
@@ -60,7 +54,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -145,24 +145,26 @@ class OotdServiceTest {
         }
 
         @Bean
-        public AmazonS3 amazonS3(LocalStackContainer localStackContainer) {
-            AWSCredentials credentials = new BasicAWSCredentials(
+        public S3Client amazonS3(LocalStackContainer localStackContainer) {
+            AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
                     localStackContainer.getAccessKey(),
-                    localStackContainer.getSecretKey());
+                    localStackContainer.getSecretKey()
+            );
 
-            return AmazonS3ClientBuilder
-                    .standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                    .withEndpointConfiguration(new EndpointConfiguration(
-                            localStackContainer.getEndpointOverride(Service.S3).toString(),
-                            localStackContainer.getRegion()
-                    ))
+            return S3Client.builder()
+                    .region(Region.of(localStackContainer.getRegion()))
+                    .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                    .overrideConfiguration(config -> config.apiCallTimeout(Duration.ofSeconds(30)))
+                    .endpointOverride(localStackContainer.getEndpointOverride(Service.S3))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build())
                     .build();
         }
 
         @Bean
-        public S3Util s3Config(AmazonS3 amazonS3) {
-            return new S3Util(amazonS3);
+        public S3Util s3Config(S3Client s3Client) {
+            return new S3Util(s3Client);
         }
     }
 

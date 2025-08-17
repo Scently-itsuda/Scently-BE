@@ -1,8 +1,5 @@
 package com.itsuda.perfume.util;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.itsuda.perfume.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -11,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,23 +26,23 @@ public class S3Util {
     private static String bucket;
     @Value("${cloud.aws.s3.bucket.expiration-time}")
     private static Long expirationTime;
-    private static AmazonS3 amazonS3;
+    private static S3Client s3Client;
 
     @Autowired
-    public S3Util(AmazonS3 amazonS3) {
-        this.amazonS3 = amazonS3;
+    public S3Util(S3Client s3Client) {
+        S3Util.s3Client = s3Client;
     }
 
     @Async
     public void uploadFile(MultipartFile file, String savePath, String fileName) {
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(file.getSize());
-        objectMetadata.setContentType(file.getContentType());
-
         try {
-            PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, savePath + fileName,
-                    file.getInputStream(), objectMetadata);
-            amazonS3.putObject(putObjectRequest);
+            RequestBody requestBody = RequestBody.fromInputStream(file.getInputStream(), file.getSize());
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket)
+                    .key(savePath + fileName)
+                    .contentType(file.getContentType())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, requestBody);
         } catch (IOException e) {
             throw new RestApiException(FILE_UPLOAD);
         }
@@ -51,14 +51,14 @@ public class S3Util {
     @Async
     public void uploadFiles(List<MultipartFile> files, String savePath, List<String> fileNames) {
         for (int i = 0; i < files.size(); i++) {
-            ObjectMetadata objectMetadata = new ObjectMetadata();
-            objectMetadata.setContentLength(files.get(i).getSize());
-            objectMetadata.setContentType(files.get(i).getContentType());
-
             try {
-                PutObjectRequest putObjectRequest = new PutObjectRequest(bucket, savePath + fileNames.get(i),
-                        files.get(i).getInputStream(), objectMetadata);
-                amazonS3.putObject(putObjectRequest);
+                RequestBody requestBody = RequestBody.fromInputStream(files.get(i).getInputStream(), files.get(i).getSize());
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket)
+                        .key(savePath + fileNames.get(i))
+                        .contentType(files.get(i).getContentType())
+                        .build();
+
+                s3Client.putObject(putObjectRequest, requestBody);
             } catch (IOException e) {
                 throw new RestApiException(FILE_UPLOAD);
             }

@@ -60,8 +60,6 @@ import static com.itsuda.perfume.exception.ErrorCode.*;
 @Transactional(readOnly = true)
 public class OotdService {
 
-    private final OotdCommentNotificationRepository ootdCommentNotificationRepository;
-    private final OotdLikeNotificationRepository ootdLikeNotificationRepository;
     private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;

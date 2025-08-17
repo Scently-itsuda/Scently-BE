@@ -14,7 +14,7 @@ public enum ErrorCode {
     NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
-    NOT_FOUNT_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
+    NOT_FOUND_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
     NOT_FOUND_FILE_PATH("1404", HttpStatus.NOT_FOUND, "존재하지 않는 파일 경로입니다"),
     NOT_FOUND_REVIEW("1404", HttpStatus.NOT_FOUND, "존재하는 리뷰입니다"),
     DELETED_OOTD("1404", HttpStatus.NOT_FOUND, "이미 삭제된 OOTD 게시글입니다"),

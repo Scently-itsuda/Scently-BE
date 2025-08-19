@@ -1,20 +1,15 @@
 package com.itsuda.perfume.util;
 
-import com.itsuda.perfume.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.IOException;
 import java.util.List;
-
-import static com.itsuda.perfume.exception.ErrorCode.*;
 
 @Component
 @RequiredArgsConstructor
@@ -32,34 +27,27 @@ public class S3Util {
     }
 
     @Async
-    public void uploadFile(MultipartFile file, String savePath, String fileName) {
-        try {
-            RequestBody requestBody = RequestBody.fromInputStream(file.getInputStream(), file.getSize());
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket)
-                    .key(savePath + fileName)
-                    .contentType(file.getContentType())
-                    .build();
+    public void uploadFile(byte[] file, String savePath, String fileName, String contentType) {
+        RequestBody requestBody = RequestBody.fromBytes(file);
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(savePath + fileName)
+                .contentType(contentType).build();
 
-            s3Client.putObject(putObjectRequest, requestBody);
-        } catch (IOException e) {
-            throw new RestApiException(FILE_UPLOAD);
-        }
+        s3Client.putObject(putObjectRequest, requestBody);
     }
 
     @Async
-    public void uploadFiles(List<MultipartFile> files, String savePath, List<String> fileNames) {
+    public void uploadFiles(List<byte[]> files, String savePath, List<String> fileNames, List<String> contentTypes) {
         for (int i = 0; i < files.size(); i++) {
-            try {
-                RequestBody requestBody = RequestBody.fromInputStream(files.get(i).getInputStream(), files.get(i).getSize());
-                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                        .bucket(bucket)
-                        .key(savePath + fileNames.get(i))
-                        .contentType(files.get(i).getContentType()).build();
+            RequestBody requestBody = RequestBody.fromBytes(files.get(i));
 
-                s3Client.putObject(putObjectRequest, requestBody);
-            } catch (IOException e) {
-                throw new RestApiException(FILE_UPLOAD);
-            }
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(savePath + fileNames.get(i))
+                    .contentType(contentTypes.get(i)).build();
+
+            s3Client.putObject(putObjectRequest, requestBody);
         }
     }
 }

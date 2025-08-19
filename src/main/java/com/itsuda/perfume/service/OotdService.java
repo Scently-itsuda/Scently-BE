@@ -27,13 +27,12 @@ import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.OotdRepository.UserLikeOotdInfo;
-import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
-import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.util.FileUtil;
 import com.itsuda.perfume.util.S3Util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -104,7 +103,7 @@ public class OotdService {
         List<OotdImage> ootdImages = IntStream.range(0, images.size()).mapToObj(index -> OotdImage.builder()
                 .ootd(ootd)
                 .originName(images.get(index).getOriginalFilename())
-                .saveName(UUID.randomUUID().toString())
+                .saveName(UUID.randomUUID().toString() + FileUtil.getFileExtensionWithDot(images.get(index).getOriginalFilename()))
                 .sequence(index).build()).toList();
         jdbcTemplate.batchUpdate("INSERT INTO ootd_image (origin_name, save_name, sequence, ootd_id, created_at) " +
                 "VALUES (?, ?, ?, ?, ?)", ootdImages, ootdImages.size(), (ps, ootdImage) -> {
@@ -132,7 +131,7 @@ public class OotdService {
             ps.setLong(2, tagId);
         });
 
-        s3Util.uploadFiles(images, OOTD_IMAGE_SAVE_PATH, ootdImages.stream().map(OotdImage::getSaveName).toList());
+        s3Util.uploadFiles(FileUtil.getFileBytes(images), OOTD_IMAGE_SAVE_PATH, ootdImages.stream().map(OotdImage::getSaveName).toList(), FileUtil.getContentTypes(images));
 
         return new CreatedOotdDto(ootd.getId());
     }

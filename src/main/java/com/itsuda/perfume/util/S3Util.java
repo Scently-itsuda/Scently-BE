@@ -2,7 +2,6 @@ package com.itsuda.perfume.util;
 
 import com.itsuda.perfume.exception.RestApiException;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -21,12 +20,11 @@ import static com.itsuda.perfume.exception.ErrorCode.*;
 @RequiredArgsConstructor
 public class S3Util {
 
-    @Value("${cloud.aws.s3.bucket.name}")
-    @Setter
-    private static String bucket;
-    @Value("${cloud.aws.s3.bucket.expiration-time}")
-    private static Long expirationTime;
     private static S3Client s3Client;
+    @Value("${cloud.aws.s3.bucket.name}")
+    private String bucket;
+    @Value("${cloud.aws.s3.bucket.expiration-time}")
+    private Long expirationTime;
 
     @Autowired
     public S3Util(S3Client s3Client) {
@@ -53,10 +51,10 @@ public class S3Util {
         for (int i = 0; i < files.size(); i++) {
             try {
                 RequestBody requestBody = RequestBody.fromInputStream(files.get(i).getInputStream(), files.get(i).getSize());
-                PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucket)
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                        .bucket(bucket)
                         .key(savePath + fileNames.get(i))
-                        .contentType(files.get(i).getContentType())
-                        .build();
+                        .contentType(files.get(i).getContentType()).build();
 
                 s3Client.putObject(putObjectRequest, requestBody);
             } catch (IOException e) {

@@ -5,7 +5,6 @@ import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
 import com.itsuda.perfume.domain.OotdPerfume;
-import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
@@ -24,7 +23,6 @@ import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.NotificationRepository;
-import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
@@ -43,14 +41,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static com.itsuda.perfume.domain.type.NotificationType.*;
 import static com.itsuda.perfume.exception.ErrorCode.*;
@@ -65,15 +67,14 @@ public class OotdService {
     private final UserFcmTokenRepository userFcmTokenRepository;
     private final NotificationRepository notificationRepository;
     private final OotdPerfumeRepository ootdPerfumeRepository;
-    private final OotdImageRepository ootdImageRepository;
     private final CommentRepository commentRepository;
     private final PerfumeRepository perfumeRepository;
-    private final OotdTagRepository ootdTagRepository;
     private final OotdRepository ootdRepository;
     private final UserRepository userRepository;
-    private final TagRepository tagRepository;
     private final FcmService fcmService;
     private final S3Util s3Util;
+
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${cloud.aws.s3.save-path.ootd-image}")
     private String OOTD_IMAGE_SAVE_PATH;
@@ -93,31 +94,45 @@ public class OotdService {
     }
 
     @Transactional
-    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume, List<Long> perfumeId,
-                                     List<MultipartFile> images) {
+    public CreatedOotdDto createOotd(Long userId, String content, List<String> tagNames, int volume,
+                                     List<Long> perfumeId, List<MultipartFile> images) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
-        List<Perfume> perfumes = perfumeRepository.findByIdIn(perfumeId);
+        List<Perfume> perfumes = perfumeRepository.findAllByIdIn(perfumeId);
 
-        AtomicInteger atomicInt = new AtomicInteger(0);
-        Ootd ootd = ootdRepository.save(Ootd.builder()
-                .likeCount(0)
-                .volume(volume)
-                .user(user)
-                .content(content).build());
+        Ootd ootd = ootdRepository.save(Ootd.builder().likeCount(0).volume(volume).user(user).content(content).build());
 
-        List<OotdImage> ootdImages = ootdImageRepository.saveAll(images.stream().map(image -> OotdImage.builder()
+        List<OotdImage> ootdImages = IntStream.range(0, images.size()).mapToObj(index -> OotdImage.builder()
                 .ootd(ootd)
-                .originName(image.getOriginalFilename())
+                .originName(images.get(index).getOriginalFilename())
                 .saveName(UUID.randomUUID().toString())
-                .sequence(atomicInt.getAndIncrement()).build()).toList());
+                .sequence(index).build()).toList();
+        jdbcTemplate.batchUpdate("INSERT INTO ootd_image (origin_name, save_name, sequence, ootd_id, created_at) " +
+                "VALUES (?, ?, ?, ?, ?)", ootdImages, ootdImages.size(), (ps, ootdImage) -> {
+            ps.setString(1, ootdImage.getOriginName());
+            ps.setString(2, ootdImage.getSaveName());
+            ps.setInt(3, ootdImage.getSequence());
+            ps.setLong(4, ootdImage.getOotd().getId());
+            ps.setDate(5, Date.valueOf(LocalDate.now()));
+        });
+
+        List<OotdPerfume> ootdPerfumes = perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd).perfume(perfume).build()).toList();
+        jdbcTemplate.batchUpdate("INSERT INTO ootd_perfume (ootd_id, perfume_id) " +
+                "VALUES (?, ?)", ootdPerfumes, ootdPerfumes.size(), (ps, ootdPerfume) -> {
+            ps.setLong(1, ootdPerfume.getOotd().getId());
+            ps.setLong(2, ootdPerfume.getPerfume().getId());
+        });
+
+        List<Tag> tags = tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList();
+        jdbcTemplate.batchUpdate("INSERT INTO tag (name) VALUES (?)", tags, tags.size(), (ps, tag) -> ps.setString(1, tag.getName()));
+        Long firstInsertedTagId = jdbcTemplate.queryForObject("SELECT last_insert_id()", Long.class);
+
+        List<Long> tagIds = LongStream.rangeClosed(firstInsertedTagId - tags.size() + 1, firstInsertedTagId).boxed().toList();
+        jdbcTemplate.batchUpdate("INSERT INTO ootd_tag (ootd_id, tag_id) VALUES (?, ?)", tagIds, tagIds.size(), (ps, tagId) -> {
+            ps.setLong(1, ootd.getId());
+            ps.setLong(2, tagId);
+        });
+
         s3Util.uploadFiles(images, OOTD_IMAGE_SAVE_PATH, ootdImages.stream().map(OotdImage::getSaveName).toList());
-
-        ootdPerfumeRepository.saveAll(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd)
-                .perfume(perfume).build()).toList());
-
-        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList());
-
-        ootdTagRepository.saveAll(savedTags.stream().map(tag -> OotdTag.builder().ootd(ootd).tag(tag).build()).toList());
 
         return new CreatedOotdDto(ootd.getId());
     }

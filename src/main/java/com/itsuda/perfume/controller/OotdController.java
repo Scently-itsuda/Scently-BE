@@ -50,10 +50,11 @@ public class OotdController {
 
     @Operation(summary = "OOTD 작성", description = "OOTD에 게시글을 작성합니다.")
     @PostMapping
-    public ResponseDto<CreatedOotdDto> createOotd(@UserId Long userId,
-                                                  @Valid @RequestPart CreateOotdDto createOotdDto,
-                                                  @Valid @ModelAttribute ImageFilesDto imageFilesDto) {
-        return new ResponseDto<>(ootdService.createOotd(userId, createOotdDto.content(), createOotdDto.tagNames(),
+    public ResponseDto<CreatedOotdDto> createOotd(
+            @UserId Long userId, @Valid @RequestPart CreateOotdDto createOotdDto,
+            @Valid @ModelAttribute ImageFilesDto imageFilesDto
+    ) {
+        return new ResponseDto<>(ootdService.createOotd(1L, createOotdDto.content(), createOotdDto.tagNames(),
                 createOotdDto.volume(), createOotdDto.perfumeIds(), imageFilesDto.images()));
     }
 

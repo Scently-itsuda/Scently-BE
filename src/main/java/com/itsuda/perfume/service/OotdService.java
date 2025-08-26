@@ -18,7 +18,6 @@ import com.itsuda.perfume.dto.response.ootd.CreatedOotdDto;
 import com.itsuda.perfume.dto.response.ootd.OotdCommentDto;
 import com.itsuda.perfume.dto.response.ootd.OotdDetailDto;
 import com.itsuda.perfume.dto.response.ootd.OotdMainDto;
-import com.itsuda.perfume.dto.response.ootd.OotdThumbnailDto;
 import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
@@ -27,7 +26,6 @@ import com.itsuda.perfume.repository.jdbctemplate.OotdImageJdbcTemplateRepositor
 import com.itsuda.perfume.repository.jdbctemplate.OotdPerfumeJdbcTemplateRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
-import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.OotdRepository.UserLikeOotdInfo;
 import com.itsuda.perfume.repository.jdbctemplate.OotdTagJdbcTemplateRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
@@ -90,9 +88,7 @@ public class OotdService {
                     case POPULAR_ASCENDING -> Sort.by("like_count").ascending();
                 });
 
-        Page<OotdThumbnailInfo> ootdThumbnails = ootdRepository.findAllIncludingUserLiked(pageable, userId);
-
-        return new OotdMainDto(ootdThumbnails.stream().map(OotdThumbnailDto::from).toList(), PageInfoDto.from(ootdThumbnails));
+        return OotdMainDto.from(ootdRepository.findAllIncludingUserLiked(pageable, userId));
     }
 
     @Transactional
@@ -125,17 +121,18 @@ public class OotdService {
     }
 
     public OotdDetailDto getOotdDetailByOotdId(Long ootdId, Long userId) {
-        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        Ootd ootd = ootdRepository.findByIdWithOotdImages(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }
+
         List<OotdPerfume> ootdPerfumes = ootdPerfumeRepository.findByOotd(ootd);
-        boolean isLiked = Optional.ofNullable(userId).map(usId -> {
-            User user = userRepository.findById(usId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
+        boolean isLiked = Optional.ofNullable(userId).map(ootdUserId -> {
+            User user = userRepository.findById(ootdUserId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
             return userLikeOotdRepository.existsByUserAndOotd(user, ootd);
         }).orElse(false);
 
-        return OotdDetailDto.from(ootd, ootd.getUser(), ootdPerfumes.stream().map(OotdPerfume::getPerfume).toList(), isLiked);
+        return OotdDetailDto.from(ootd, ootdPerfumes, isLiked);
     }
 
     @Transactional
@@ -144,6 +141,7 @@ public class OotdService {
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }
+
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         if (!ootd.getUser().getId().equals(user.getId())) {
             throw new RestApiException(ONLY_OOTD_OWNER_DELETE);

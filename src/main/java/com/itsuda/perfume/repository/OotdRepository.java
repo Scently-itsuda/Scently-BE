@@ -3,7 +3,6 @@ package com.itsuda.perfume.repository;
 import com.itsuda.perfume.domain.Ootd;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -12,7 +11,7 @@ import java.util.Optional;
 public interface OotdRepository extends JpaRepository<Ootd, Long> {
 
     @Query(value = "SELECT o FROM Ootd o JOIN FETCH o.ootdImages WHERE o.id = :ootdId")
-    Optional<Ootd> findByIdWithOotdImagesAndOotdTags(Long ootdId);
+    Optional<Ootd> findByIdWithOotdImages(Long ootdId);
 
     @Query(value = "SELECT o.id AS ootdId, oi.save_name AS ootdImageUrl, " +
             "CASE WHEN ulo.id IS NULL THEN FALSE ELSE TRUE END AS isLiked FROM ootd o " +

@@ -4,7 +4,9 @@ import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
+import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
+import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.BrandType;
@@ -28,7 +30,9 @@ import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
+import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
@@ -88,13 +92,19 @@ class OotdServiceTest {
     private AuditingHandler auditingHandler;
 
     @Autowired
-    OotdService ootdService;
+    private OotdService ootdService;
 
     @Autowired
-    OotdImageRepository ootdImageRepository;
+    private OotdImageRepository ootdImageRepository;
 
     @Autowired
-    OotdRepository ootdRepository;
+    private OotdRepository ootdRepository;
+
+    @Autowired
+    private OotdTagRepository ootdTagRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @Autowired
     private PerfumeRepository perfumeRepository;
@@ -276,7 +286,7 @@ class OotdServiceTest {
         CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, List.of(perfume.getId()), mockMultipartFiles);
 
         // then
-        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId());
+        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImages(result.ootdId());
         assertThat(ootd).isPresent();
         assertThat(ootd.get()).extracting("content", "user").contains(content, user);
     }
@@ -297,7 +307,7 @@ class OotdServiceTest {
         em.clear();
 
         // then
-        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImages(result.ootdId()).get();
         assertThat(ootd.getOotdTags()).extracting(ootdTag -> ootdTag.getTag().getName())
                 .contains("2025", "향수", "느좋");
     }
@@ -320,7 +330,7 @@ class OotdServiceTest {
                 perfumes.stream().map(Perfume::getId).toList(), mockMultipartFiles);
 
         // then
-        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImages(result.ootdId()).get();
         assertThat(ootdPerfumeRepository.findByOotd(ootd)).extracting("perfume")
                 .containsAll(perfumes);
     }
@@ -333,6 +343,8 @@ class OotdServiceTest {
         ootdImageRepository.saveAll(List.of(createOotdImage(0, savedOotd),
                 createOotdImage(1, savedOotd),
                 createOotdImage(2, savedOotd)));
+        List<Tag> tags = tagRepository.saveAll(List.of(createTag("test1"), createTag("test2"), createTag("test3")));
+        ootdTagRepository.saveAll(tags.stream().map(tag -> createOotdTag(savedOotd, tag)).toList());
         em.flush();
         em.clear();
 
@@ -340,8 +352,8 @@ class OotdServiceTest {
         OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId(), user.getId());
 
         // then
-        assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")
-                .contains(savedOotd.getId(), savedOotd.getCreatedAt());
+        assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt", "ootdInfo.tags")
+                .contains(savedOotd.getId(), savedOotd.getCreatedAt(), tags.stream().map(Tag::getName).toList());
         assertThat(ootdDetail.ootdInfo().ootdImageUrls()).hasSize(3);
     }
 
@@ -706,5 +718,13 @@ class OotdServiceTest {
                 .ootd(ootd)
                 .user(user)
                 .build();
+    }
+
+    private static Tag createTag(String name) {
+        return Tag.builder().name(name).build();
+    }
+
+    private static OotdTag createOotdTag(Ootd ootd, Tag tag) {
+        return OotdTag.builder().ootd(ootd).tag(tag).build();
     }
 }

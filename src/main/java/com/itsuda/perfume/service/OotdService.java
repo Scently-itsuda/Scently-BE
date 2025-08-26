@@ -23,11 +23,15 @@ import com.itsuda.perfume.dto.response.ootd.UserLikeOotdsDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.NotificationRepository;
+import com.itsuda.perfume.repository.jdbctemplate.OotdImageJdbcTemplateRepository;
+import com.itsuda.perfume.repository.jdbctemplate.OotdPerfumeJdbcTemplateRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
 import com.itsuda.perfume.repository.OotdRepository.OotdThumbnailInfo;
 import com.itsuda.perfume.repository.OotdRepository.UserLikeOotdInfo;
+import com.itsuda.perfume.repository.jdbctemplate.OotdTagJdbcTemplateRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.jdbctemplate.TagJdbcTemplateRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
@@ -40,13 +44,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Date;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -61,6 +62,9 @@ import static com.itsuda.perfume.exception.ErrorCode.*;
 @Transactional(readOnly = true)
 public class OotdService {
 
+    private final OotdPerfumeJdbcTemplateRepository ootdPerfumeJdbcTemplateRepository;
+    private final OotdImageJdbcTemplateRepository ootdImageJdbcTemplateRepository;
+    private final TagJdbcTemplateRepository tagJdbcTemplateRepository;
     private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserLikeOotdRepository userLikeOotdRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
@@ -72,8 +76,7 @@ public class OotdService {
     private final UserRepository userRepository;
     private final FcmService fcmService;
     private final S3Util s3Util;
-
-    private final JdbcTemplate jdbcTemplate;
+    private final OotdTagJdbcTemplateRepository ootdTagJdbcTemplateRepository;
 
     @Value("${cloud.aws.s3.save-path.ootd-image}")
     private String OOTD_IMAGE_SAVE_PATH;
@@ -103,33 +106,18 @@ public class OotdService {
         List<OotdImage> ootdImages = IntStream.range(0, images.size()).mapToObj(index -> OotdImage.builder()
                 .ootd(ootd)
                 .originName(images.get(index).getOriginalFilename())
-                .saveName(UUID.randomUUID().toString() + FileUtil.getFileExtensionWithDot(images.get(index).getOriginalFilename()))
+                .saveName(UUID.randomUUID() + FileUtil.getFileExtensionWithDot(images.get(index).getOriginalFilename()))
                 .sequence(index).build()).toList();
-        jdbcTemplate.batchUpdate("INSERT INTO ootd_image (origin_name, save_name, sequence, ootd_id, created_at) " +
-                "VALUES (?, ?, ?, ?, ?)", ootdImages, ootdImages.size(), (ps, ootdImage) -> {
-            ps.setString(1, ootdImage.getOriginName());
-            ps.setString(2, ootdImage.getSaveName());
-            ps.setInt(3, ootdImage.getSequence());
-            ps.setLong(4, ootdImage.getOotd().getId());
-            ps.setDate(5, Date.valueOf(LocalDate.now()));
-        });
+        ootdImageJdbcTemplateRepository.batchInsert(ootdImages);
 
-        List<OotdPerfume> ootdPerfumes = perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd).perfume(perfume).build()).toList();
-        jdbcTemplate.batchUpdate("INSERT INTO ootd_perfume (ootd_id, perfume_id) " +
-                "VALUES (?, ?)", ootdPerfumes, ootdPerfumes.size(), (ps, ootdPerfume) -> {
-            ps.setLong(1, ootdPerfume.getOotd().getId());
-            ps.setLong(2, ootdPerfume.getPerfume().getId());
-        });
+        ootdPerfumeJdbcTemplateRepository.batchInsert(perfumes.stream().map(perfume -> OotdPerfume.builder().ootd(ootd).perfume(perfume).build()).toList());
 
         List<Tag> tags = tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList();
-        jdbcTemplate.batchUpdate("INSERT INTO tag (name) VALUES (?)", tags, tags.size(), (ps, tag) -> ps.setString(1, tag.getName()));
-        Long firstInsertedTagId = jdbcTemplate.queryForObject("SELECT last_insert_id()", Long.class);
+        tagJdbcTemplateRepository.batchInsert(tags);
+        Long firstInsertedTagId = tagJdbcTemplateRepository.getLastInsertedId();
 
         List<Long> tagIds = LongStream.rangeClosed(firstInsertedTagId - tags.size() + 1, firstInsertedTagId).boxed().toList();
-        jdbcTemplate.batchUpdate("INSERT INTO ootd_tag (ootd_id, tag_id) VALUES (?, ?)", tagIds, tagIds.size(), (ps, tagId) -> {
-            ps.setLong(1, ootd.getId());
-            ps.setLong(2, tagId);
-        });
+        ootdTagJdbcTemplateRepository.batchInsert(tagIds, ootd);
 
         s3Util.uploadFiles(FileUtil.getFileBytes(images), OOTD_IMAGE_SAVE_PATH, ootdImages.stream().map(OotdImage::getSaveName).toList(), FileUtil.getContentTypes(images));
 

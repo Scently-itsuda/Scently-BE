@@ -2,7 +2,6 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
-import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;

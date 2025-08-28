@@ -42,6 +42,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -160,13 +161,14 @@ public class OotdService {
         return CommentsDto.from(comments);
     }
 
-    // TODO - 추후 처리율 제한과 비동기 처리 예정
+    @Async
     @Transactional
     public void sendLikeToOotd(Long ootdId, Long userId) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }
+
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
 
@@ -204,8 +206,8 @@ public class OotdService {
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
 
-        Comment comment = commentRepository.save(Comment.builder().
-                content(content)
+        Comment comment = commentRepository.save(Comment.builder()
+                .content(content)
                 .likeCount(0)
                 .parentComment(parentComment.orElse(null))
                 .ootd(ootd)
@@ -214,15 +216,14 @@ public class OotdService {
                 .build());
 
         userFcmToken.ifPresent(fcmToken -> {
-                    Notification notification = notificationRepository.save(
-                            Notification.builder()
-                                    .title(user.getNickname() + "님이 " + ootd.getUser() + "님의 게시물에 댓글을 남겼습니다.")
-                                    .bodyMessage(comment.getContent())
-                                    .notificationSender(user)
-                                    .notificationReceiver(comment.getUser())
-                                    .targetId(ootd.getId())
-                                    .notificationType(OOTD_COMMENT)
-                                    .build());
+                    Notification notification = notificationRepository.save(Notification.builder()
+                            .title(user.getNickname() + "님이 " + ootd.getUser() + "님의 게시물에 댓글을 남겼습니다.")
+                            .bodyMessage(comment.getContent())
+                            .notificationSender(user)
+                            .notificationReceiver(comment.getUser())
+                            .targetId(ootd.getId())
+                            .notificationType(OOTD_COMMENT)
+                            .build());
                     fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
                 }
         );

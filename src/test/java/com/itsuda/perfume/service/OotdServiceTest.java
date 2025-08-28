@@ -37,11 +37,13 @@ import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.service.OotdServiceTest.TestAsyncConfig;
 import com.itsuda.perfume.util.S3Util;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,6 +51,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.http.MediaType;
@@ -72,6 +77,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -80,6 +86,7 @@ import static org.mockito.Mockito.doNothing;
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestAsyncConfig.class)
 class OotdServiceTest {
 
     @MockBean
@@ -149,6 +156,7 @@ class OotdServiceTest {
 
     @TestConfiguration
     public class LocalStackConfig {
+
         @Bean
         public LocalStackContainer localStackContainer() {
             return new LocalStackContainer().withServices(Service.S3);
@@ -175,6 +183,15 @@ class OotdServiceTest {
         @Bean
         public S3Util s3Config(S3Client s3Client) {
             return new S3Util(s3Client);
+        }
+    }
+
+    @TestConfiguration
+    static class TestAsyncConfig {
+
+        @Bean(name = "taskExecutor") // 이름을 반드시 taskExecutor로!
+        public TaskExecutor taskExecutor() {
+            return new SyncTaskExecutor(); // 항상 동기 실행
         }
     }
 
@@ -388,9 +405,9 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(1));
         Comment comment1 = commentRepository.save(createComment(1, null, ootd, user));
         Comment comment2 = commentRepository.save(createComment(2, null, ootd, user));
-        Comment comment1Child1 = commentRepository.save(createComment(3, comment1, ootd, user));
-        Comment comment1Child2 = commentRepository.save(createComment(4, comment1, ootd, user));
-        Comment comment2Child1 = commentRepository.save(createComment(5, comment2, ootd, user));
+        commentRepository.save(createComment(3, comment1, ootd, user));
+        commentRepository.save(createComment(4, comment1, ootd, user));
+        commentRepository.save(createComment(5, comment2, ootd, user));
 
         em.flush();
         em.clear();
@@ -411,6 +428,7 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(0));
         ootdImageRepository.save(createOotdImage(0, ootd));
         int originLikeCount = ootd.getLikeCount();
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
@@ -428,6 +446,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, ootd));
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
         int originLikeCount = ootd.getLikeCount();
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
@@ -444,6 +463,7 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(0));
         ootdImageRepository.save(createOotdImage(0, ootd));
         doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());

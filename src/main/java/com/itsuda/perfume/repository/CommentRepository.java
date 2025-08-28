@@ -11,8 +11,8 @@ import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    @EntityGraph(attributePaths = {"childComments", "user"})
     @Override
+    @EntityGraph(attributePaths = {"childComments", "user"})
     Optional<Comment> findById(Long commentId);
 
     @EntityGraph(attributePaths = {"childComments", "user"})

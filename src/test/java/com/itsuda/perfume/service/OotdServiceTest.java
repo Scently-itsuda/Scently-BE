@@ -620,6 +620,8 @@ class OotdServiceTest {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
         Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        em.flush();
+        em.clear();
 
         // when
         ootdService.deleteOotdComment(user.getId(), comment.getId());

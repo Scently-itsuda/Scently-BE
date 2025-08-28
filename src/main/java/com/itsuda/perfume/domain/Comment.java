@@ -33,7 +33,7 @@ public class Comment extends ModifiableBaseEntity {
     @Column(nullable = false)
     private int likeCount;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment")
     private Comment parentComment;
 
@@ -48,7 +48,7 @@ public class Comment extends ModifiableBaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -197,14 +197,14 @@ public class OotdService {
     }
 
     @Transactional
-    public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long commentId, String content) {
+    public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long parentCommentId, String content) {
         Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(ootd.getUser());
-        Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
+        Optional<Comment> parentComment = Optional.ofNullable(parentCommentId).flatMap(commentRepository::findById);
 
         Comment comment = commentRepository.save(Comment.builder()
                 .content(content)

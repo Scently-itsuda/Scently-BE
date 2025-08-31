@@ -46,6 +46,7 @@ public class Perfume {
     @Enumerated(EnumType.STRING)
     private PotentialType potential;
 
+    @Column(columnDefinition = "TEXT")
     private String description; // 향 한줄 소개
 
     @Column(nullable = false)

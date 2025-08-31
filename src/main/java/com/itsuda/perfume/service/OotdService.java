@@ -198,7 +198,7 @@ public class OotdService {
 
     @Transactional
     public OotdCommentDto writeCommentToOotd(Long ootdId, Long userId, Long parentCommentId, String content) {
-        Ootd ootd = ootdRepository.findById(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
+        Ootd ootd = ootdRepository.findByIdWithUser(ootdId).orElseThrow(() -> new RestApiException(NOT_FOUND_OOTD));
         if (Optional.ofNullable(ootd.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_OOTD);
         }

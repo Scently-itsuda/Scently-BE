@@ -13,6 +13,9 @@ public interface OotdRepository extends JpaRepository<Ootd, Long> {
     @Query(value = "SELECT o FROM Ootd o JOIN FETCH o.ootdImages WHERE o.id = :ootdId")
     Optional<Ootd> findByIdWithOotdImages(Long ootdId);
 
+    @Query("SELECT o FROM Ootd o JOIN FETCH o.user WHERE o.id = :ootdId")
+    Optional<Ootd> findByIdWithUser(Long ootdId);
+
     @Query(value = "SELECT o.id AS ootdId, oi.save_name AS ootdImageUrl, " +
             "CASE WHEN ulo.id IS NULL THEN FALSE ELSE TRUE END AS isLiked FROM ootd o " +
             "LEFT JOIN ootd_image oi ON oi.sequence = 0 AND oi.ootd_id = o.id " +

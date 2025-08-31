@@ -152,6 +152,8 @@ class OotdServiceTest {
         userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
+        em.flush();
+        em.clear();
     }
 
     @TestConfiguration
@@ -478,6 +480,8 @@ class OotdServiceTest {
     void writeCommentToOotd() {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
+        em.flush();
+        em.clear();
 
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(), null, "test comment");
@@ -495,6 +499,8 @@ class OotdServiceTest {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
         Comment comment = commentRepository.save(createComment(1, null, ootd, user));
+        em.flush();
+        em.clear();
 
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
@@ -503,8 +509,8 @@ class OotdServiceTest {
 
         // then
         assertThat(reply.isPresent()).isTrue();
-        assertThat(reply.get()).extracting("parentComment", "content")
-                .contains(comment, "test comment");
+        assertThat(reply.get()).extracting("parentComment.id", "content")
+                .contains(comment.getId(), "test comment");
     }
 
     @DisplayName("사용자가 OOTD에 댓글을 달면, OOTD 작성자에게 알림이 누적된다.")

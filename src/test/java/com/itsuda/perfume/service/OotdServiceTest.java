@@ -252,12 +252,18 @@ class OotdServiceTest {
     void getOotdThumbnailsSortedByPopularDescending() {
         // given
         Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd1));
 
         Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        savedOotd2.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd2));
 
         Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        savedOotd3.increaseLikeCount();
+        savedOotd3.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
@@ -274,12 +280,18 @@ class OotdServiceTest {
     void getOotdThumbnailsSortedByPopularAscending() {
         // given
         Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd1));
 
         Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        savedOotd2.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd2));
 
         Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        savedOotd3.increaseLikeCount();
+        savedOotd3.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
@@ -307,7 +319,7 @@ class OotdServiceTest {
         // then
         Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImages(result.ootdId());
         assertThat(ootd).isPresent();
-        assertThat(ootd.get()).extracting("content", "user").contains(content, user);
+        assertThat(ootd.get()).extracting("content", "user.id").contains(content, user.getId());
     }
 
     @DisplayName("OOTD에 특정 태그를 가지는 게시글을 생성한다.")
@@ -528,7 +540,7 @@ class OotdServiceTest {
 
         // then
         assertThat(notifications).hasSize(1);
-        assertThat(notifications).extracting("notificationSender").containsExactly(user);
+        assertThat(notifications).extracting("notificationSender.id").containsExactly(user.getId());
     }
 
     @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")
@@ -664,7 +676,6 @@ class OotdServiceTest {
 
     private Ootd createOotd(int number) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .user(user)
@@ -741,7 +752,6 @@ class OotdServiceTest {
     private static Comment createComment(int number, Comment parent, Ootd ootd, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .ootd(ootd)
                 .user(user)

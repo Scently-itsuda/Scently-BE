@@ -553,7 +553,6 @@ class PostServiceTest {
         return Post.builder()
                 .title("test title" + number)
                 .content("test content" + number)
-                .likeCount(number)
                 .user(user)
                 .build();
     }
@@ -561,7 +560,6 @@ class PostServiceTest {
     private static Comment createComment(int number, Comment parent, Post post, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .post(post)
                 .user(user)

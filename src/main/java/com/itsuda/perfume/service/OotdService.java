@@ -182,7 +182,6 @@ public class OotdService {
 
         Comment comment = commentRepository.save(Comment.builder()
                 .content(content)
-                .likeCount(0)
                 .parentComment(parentComment.orElse(null))
                 .ootd(ootd)
                 .post(null)

@@ -92,7 +92,6 @@ class CommentRepositoryTest {
     private static Comment createComment(int number, Comment parent, Post post, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .post(post)
                 .user(user)

@@ -62,8 +62,7 @@ public class Ootd extends ModifiableBaseEntity {
     // ------------------------ 도메인 메서드 ----------------------------
 
     @Builder
-    private Ootd(int likeCount, int volume, String content, User user) {
-        this.likeCount = likeCount;
+    private Ootd(int volume, String content, User user) {
         this.volume = volume;
         this.content = content;
         this.user = user;

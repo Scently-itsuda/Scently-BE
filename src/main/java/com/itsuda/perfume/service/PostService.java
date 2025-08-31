@@ -191,7 +191,6 @@ public class PostService {
 
         Comment comment = commentRepository.save(Comment.builder().
                 content(content)
-                .likeCount(0)
                 .parentComment(parentComment.orElse(null))
                 .ootd(null)
                 .post(post)

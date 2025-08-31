@@ -7,10 +7,14 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
+
+    @Query(value = "SELECT c FROM Comment c JOIN FETCH c.user WHERE c.id = :commentId")
+    Optional<Comment> findByIdWithUser(Long commentId);
 
     @Query(value = "SELECT c FROM Comment c JOIN FETCH c.childComments JOIN FETCH c.user WHERE c.id = :commentId")
     Optional<Comment> findByIdWithChildCommentsAndUser(long commentId);

@@ -232,7 +232,7 @@ public class OotdService {
 
     @Transactional
     public void deleteOotdComment(Long userId, Long commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        Comment comment = commentRepository.findByIdWithUser(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
         if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
             throw new RestApiException(DELETED_COMMENT);
         }
@@ -264,23 +264,18 @@ public class OotdService {
     }
 
     public UserLikeOotdsDto getAllUserLikeOotdsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
-        Page<UserLikeOotdInfo> userLikeOotdInfos = Page.empty();
-
-        if (ootdOrderType.equals(OotdOrderType.NEWEST_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
-            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
-        } else if (ootdOrderType.equals(OotdOrderType.NEWEST_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").ascending());
-            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
-        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").descending());
-            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
-        } else if (ootdOrderType.equals(OotdOrderType.POPULAR_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("like_count").ascending());
-            userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        if (!userRepository.existsById(userId)) {
+            throw new RestApiException(NOT_FOUND_USER);
         }
 
+        Pageable pageable = PageRequest.of(page, size,
+                switch (ootdOrderType) {
+                    case NEWEST_DESCENDING -> Sort.by("created_at").descending();
+                    case NEWEST_ASCENDING -> Sort.by("created_at").ascending();
+                    case POPULAR_DESCENDING -> Sort.by("like_count").descending();
+                    case POPULAR_ASCENDING -> Sort.by("like_count").ascending();
+                });
+        Page<UserLikeOotdInfo> userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
         return UserLikeOotdsDto.from(userLikeOotdInfos.getContent(), PageInfoDto.from(userLikeOotdInfos));
     }
 }

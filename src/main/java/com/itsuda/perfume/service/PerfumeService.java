@@ -106,14 +106,14 @@ public class PerfumeService {
         wishPerfume.ifPresentOrElse(
                 wish -> {
                     if (wish.changeWishStatus()) {
-                        perfume.increaseLikeCount();
+                        perfume.increaseWishCount();
                     } else {
-                        perfume.decreaseLikeCount();
+                        perfume.decreaseWishCount();
                     }
                 },
                 () -> {
                     wishPerfumeRepository.save(WishPerfume.builder().perfume(perfume).customer(user).build());
-                    perfume.increaseLikeCount();
+                    perfume.increaseWishCount();
                 }
         );
     }

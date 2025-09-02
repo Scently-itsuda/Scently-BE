@@ -86,11 +86,11 @@ public class Perfume {
         this.registeredAt = registeredAt;
     }
 
-    public int increaseLikeCount() {
+    public int increaseWishCount() {
         return ++this.wishCount;
     }
 
-    public int decreaseLikeCount() {
+    public int decreaseWishCount() {
         return --this.wishCount;
     }
 }

@@ -1,14 +1,14 @@
 package com.itsuda.perfume.config;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+
+import java.time.Duration;
 
 @Configuration
 public class S3Config {
@@ -23,16 +23,14 @@ public class S3Config {
     private String region;
 
     @Bean
-    public AmazonS3 amazonS3() {
-        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        clientConfiguration.setConnectionTimeout(10000);
+    public S3Client amazonS3() {
+        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
 
-        return AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withClientConfiguration(clientConfiguration)
-                .withRegion(region)
+        return S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                .overrideConfiguration(config -> config
+                        .apiCallTimeout(Duration.ofSeconds(30)))
                 .build();
     }
 }

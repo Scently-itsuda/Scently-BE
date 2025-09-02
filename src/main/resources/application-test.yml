@@ -5,7 +5,7 @@ spring:
 
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:scently
+    url: jdbc:h2:mem:scently;MODE=MySQL # MySQL과 호환되도록 벤더명 추가
     username: sa
     password:
 
@@ -31,6 +31,7 @@ spring:
       springframework:
           security: DEBUG
           security.oauth2: DEBUG
+          jdbc: debug
 
   security:
     oauth2:

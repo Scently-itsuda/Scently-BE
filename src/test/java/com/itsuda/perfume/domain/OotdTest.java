@@ -11,25 +11,27 @@ class OotdTest {
     @Test
     void increaseLikeCount() {
         // given
-        Ootd ootd = Ootd.builder().likeCount(1).build();
+        Ootd ootd = Ootd.builder().build();
+        int beforeLikeCount = ootd.getLikeCount();
 
         // when
         ootd.increaseLikeCount();
 
         // then
-        assertThat(ootd.getLikeCount()).isEqualTo(2);
+        assertThat(beforeLikeCount + 1).isEqualTo(ootd.getLikeCount());
     }
 
     @DisplayName("OOTD 게시글의 좋아요 수를 1만큼 감소시킨다.")
     @Test
     void decreaseLikeCount() {
         // given
-        Ootd ootd = Ootd.builder().likeCount(1).build();
+        Ootd ootd = Ootd.builder().build();
+        int beforeLikeCount = ootd.getLikeCount();
 
         // when
         ootd.decreaseLikeCount();
 
         // then
-        assertThat(ootd.getLikeCount()).isEqualTo(0);
+        assertThat(beforeLikeCount - 1).isEqualTo(ootd.getLikeCount());
     }
 }

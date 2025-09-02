@@ -1,16 +1,12 @@
 package com.itsuda.perfume.service;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.OotdImage;
+import com.itsuda.perfume.domain.OotdTag;
 import com.itsuda.perfume.domain.Perfume;
+import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.type.BrandType;
@@ -34,16 +30,20 @@ import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.OotdImageRepository;
 import com.itsuda.perfume.repository.OotdPerfumeRepository;
 import com.itsuda.perfume.repository.OotdRepository;
+import com.itsuda.perfume.repository.OotdTagRepository;
 import com.itsuda.perfume.repository.PerfumeRepository;
+import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikeOotdRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.service.OotdServiceTest.TestAsyncConfig;
 import com.itsuda.perfume.util.S3Util;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,6 +51,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.http.MediaType;
@@ -60,7 +63,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -68,6 +77,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -76,6 +86,7 @@ import static org.mockito.Mockito.doNothing;
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestAsyncConfig.class)
 class OotdServiceTest {
 
     @MockBean
@@ -88,13 +99,19 @@ class OotdServiceTest {
     private AuditingHandler auditingHandler;
 
     @Autowired
-    OotdService ootdService;
+    private OotdService ootdService;
 
     @Autowired
-    OotdImageRepository ootdImageRepository;
+    private OotdImageRepository ootdImageRepository;
 
     @Autowired
-    OotdRepository ootdRepository;
+    private OotdRepository ootdRepository;
+
+    @Autowired
+    private OotdTagRepository ootdTagRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @Autowired
     private PerfumeRepository perfumeRepository;
@@ -135,34 +152,48 @@ class OotdServiceTest {
         userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
+        em.flush();
+        em.clear();
     }
 
     @TestConfiguration
     public class LocalStackConfig {
+
         @Bean
         public LocalStackContainer localStackContainer() {
             return new LocalStackContainer().withServices(Service.S3);
         }
 
         @Bean
-        public AmazonS3 amazonS3(LocalStackContainer localStackContainer) {
-            AWSCredentials credentials = new BasicAWSCredentials(
+        public S3Client amazonS3(LocalStackContainer localStackContainer) {
+            AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(
                     localStackContainer.getAccessKey(),
-                    localStackContainer.getSecretKey());
+                    localStackContainer.getSecretKey()
+            );
 
-            return AmazonS3ClientBuilder
-                    .standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                    .withEndpointConfiguration(new EndpointConfiguration(
-                            localStackContainer.getEndpointOverride(Service.S3).toString(),
-                            localStackContainer.getRegion()
-                    ))
+            return S3Client.builder()
+                    .region(Region.of(localStackContainer.getRegion()))
+                    .credentialsProvider(StaticCredentialsProvider.create(awsBasicCredentials))
+                    .overrideConfiguration(config -> config.apiCallTimeout(Duration.ofSeconds(30)))
+                    .endpointOverride(localStackContainer.getEndpointOverride(Service.S3))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build())
                     .build();
         }
 
         @Bean
-        public S3Util s3Config(AmazonS3 amazonS3) {
-            return new S3Util(amazonS3);
+        public S3Util s3Config(S3Client s3Client) {
+            return new S3Util(s3Client);
+        }
+    }
+
+    @TestConfiguration
+    static class TestAsyncConfig {
+
+        @Bean(name = "taskExecutor") // 이름을 반드시 taskExecutor로!
+        public TaskExecutor taskExecutor() {
+            return new SyncTaskExecutor(); // 항상 동기 실행
         }
     }
 
@@ -221,12 +252,18 @@ class OotdServiceTest {
     void getOotdThumbnailsSortedByPopularDescending() {
         // given
         Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd1));
 
         Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        savedOotd2.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd2));
 
         Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        savedOotd3.increaseLikeCount();
+        savedOotd3.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
@@ -243,12 +280,18 @@ class OotdServiceTest {
     void getOotdThumbnailsSortedByPopularAscending() {
         // given
         Ootd savedOotd1 = ootdRepository.save(createOotd(3));
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
+        savedOotd1.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd1));
 
         Ootd savedOotd2 = ootdRepository.save(createOotd(1));
+        savedOotd2.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd2));
 
         Ootd savedOotd3 = ootdRepository.save(createOotd(2));
+        savedOotd3.increaseLikeCount();
+        savedOotd3.increaseLikeCount();
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
@@ -274,9 +317,9 @@ class OotdServiceTest {
         CreatedOotdDto result = ootdService.createOotd(user.getId(), content, tags, 10, List.of(perfume.getId()), mockMultipartFiles);
 
         // then
-        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId());
+        Optional<Ootd> ootd = ootdRepository.findByIdWithOotdImages(result.ootdId());
         assertThat(ootd).isPresent();
-        assertThat(ootd.get()).extracting("content", "user").contains(content, user);
+        assertThat(ootd.get()).extracting("content", "user.id").contains(content, user.getId());
     }
 
     @DisplayName("OOTD에 특정 태그를 가지는 게시글을 생성한다.")
@@ -295,7 +338,7 @@ class OotdServiceTest {
         em.clear();
 
         // then
-        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImages(result.ootdId()).get();
         assertThat(ootd.getOotdTags()).extracting(ootdTag -> ootdTag.getTag().getName())
                 .contains("2025", "향수", "느좋");
     }
@@ -318,7 +361,7 @@ class OotdServiceTest {
                 perfumes.stream().map(Perfume::getId).toList(), mockMultipartFiles);
 
         // then
-        Ootd ootd = ootdRepository.findByIdWithOotdImagesAndOotdTags(result.ootdId()).get();
+        Ootd ootd = ootdRepository.findByIdWithOotdImages(result.ootdId()).get();
         assertThat(ootdPerfumeRepository.findByOotd(ootd)).extracting("perfume")
                 .containsAll(perfumes);
     }
@@ -331,6 +374,8 @@ class OotdServiceTest {
         ootdImageRepository.saveAll(List.of(createOotdImage(0, savedOotd),
                 createOotdImage(1, savedOotd),
                 createOotdImage(2, savedOotd)));
+        List<Tag> tags = tagRepository.saveAll(List.of(createTag("test1"), createTag("test2"), createTag("test3")));
+        ootdTagRepository.saveAll(tags.stream().map(tag -> createOotdTag(savedOotd, tag)).toList());
         em.flush();
         em.clear();
 
@@ -338,8 +383,8 @@ class OotdServiceTest {
         OotdDetailDto ootdDetail = ootdService.getOotdDetailByOotdId(savedOotd.getId(), user.getId());
 
         // then
-        assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt")
-                .contains(savedOotd.getId(), savedOotd.getCreatedAt());
+        assertThat(ootdDetail).extracting("ootdInfo.ootdId", "ootdInfo.createdAt", "ootdInfo.tags")
+                .contains(savedOotd.getId(), savedOotd.getCreatedAt(), tags.stream().map(Tag::getName).toList());
         assertThat(ootdDetail.ootdInfo().ootdImageUrls()).hasSize(3);
     }
 
@@ -374,9 +419,9 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(1));
         Comment comment1 = commentRepository.save(createComment(1, null, ootd, user));
         Comment comment2 = commentRepository.save(createComment(2, null, ootd, user));
-        Comment comment1Child1 = commentRepository.save(createComment(3, comment1, ootd, user));
-        Comment comment1Child2 = commentRepository.save(createComment(4, comment1, ootd, user));
-        Comment comment2Child1 = commentRepository.save(createComment(5, comment2, ootd, user));
+        commentRepository.save(createComment(3, comment1, ootd, user));
+        commentRepository.save(createComment(4, comment1, ootd, user));
+        commentRepository.save(createComment(5, comment2, ootd, user));
 
         em.flush();
         em.clear();
@@ -397,6 +442,7 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(0));
         ootdImageRepository.save(createOotdImage(0, ootd));
         int originLikeCount = ootd.getLikeCount();
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
@@ -414,6 +460,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, ootd));
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
         int originLikeCount = ootd.getLikeCount();
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
@@ -430,6 +477,7 @@ class OotdServiceTest {
         Ootd ootd = ootdRepository.save(createOotd(0));
         ootdImageRepository.save(createOotdImage(0, ootd));
         doNothing().when(fcmService).sendFCMMessage(anyString(), anyString(), anyString());
+        Mockito.doNothing().when(fcmService).saveUserFcmToken(anyLong(), anyString());
 
         // when
         ootdService.sendLikeToOotd(ootd.getId(), user.getId());
@@ -444,6 +492,8 @@ class OotdServiceTest {
     void writeCommentToOotd() {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
+        em.flush();
+        em.clear();
 
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(), null, "test comment");
@@ -461,6 +511,8 @@ class OotdServiceTest {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
         Comment comment = commentRepository.save(createComment(1, null, ootd, user));
+        em.flush();
+        em.clear();
 
         // when
         OotdCommentDto result = ootdService.writeCommentToOotd(ootd.getId(), user.getId(),
@@ -469,8 +521,8 @@ class OotdServiceTest {
 
         // then
         assertThat(reply.isPresent()).isTrue();
-        assertThat(reply.get()).extracting("parentComment", "content")
-                .contains(comment, "test comment");
+        assertThat(reply.get()).extracting("parentComment.id", "content")
+                .contains(comment.getId(), "test comment");
     }
 
     @DisplayName("사용자가 OOTD에 댓글을 달면, OOTD 작성자에게 알림이 누적된다.")
@@ -488,7 +540,7 @@ class OotdServiceTest {
 
         // then
         assertThat(notifications).hasSize(1);
-        assertThat(notifications).extracting("notificationSender").containsExactly(user);
+        assertThat(notifications).extracting("notificationSender.id").containsExactly(user.getId());
     }
 
     @DisplayName("댓글에 좋아요를 요청하면 좋아요가 1만큼 오르고 사용자는 댓글에 좋아요를 누른 것을 확인할 수 있다.")
@@ -586,6 +638,8 @@ class OotdServiceTest {
         // given
         Ootd ootd = ootdRepository.save(createOotd(0));
         Comment comment = commentRepository.save(createComment(0, null, ootd, user));
+        em.flush();
+        em.clear();
 
         // when
         ootdService.deleteOotdComment(user.getId(), comment.getId());
@@ -622,7 +676,6 @@ class OotdServiceTest {
 
     private Ootd createOotd(int number) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .user(user)
@@ -699,10 +752,17 @@ class OotdServiceTest {
     private static Comment createComment(int number, Comment parent, Ootd ootd, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .ootd(ootd)
                 .user(user)
                 .build();
+    }
+
+    private static Tag createTag(String name) {
+        return Tag.builder().name(name).build();
+    }
+
+    private static OotdTag createOotdTag(Ootd ootd, Tag tag) {
+        return OotdTag.builder().ootd(ootd).tag(tag).build();
     }
 }

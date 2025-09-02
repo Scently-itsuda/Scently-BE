@@ -2,7 +2,6 @@ package com.itsuda.perfume.service;
 
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
-import com.itsuda.perfume.domain.Ootd;
 import com.itsuda.perfume.domain.Post;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
@@ -554,7 +553,6 @@ class PostServiceTest {
         return Post.builder()
                 .title("test title" + number)
                 .content("test content" + number)
-                .likeCount(number)
                 .user(user)
                 .build();
     }
@@ -562,7 +560,6 @@ class PostServiceTest {
     private static Comment createComment(int number, Comment parent, Post post, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .post(post)
                 .user(user)

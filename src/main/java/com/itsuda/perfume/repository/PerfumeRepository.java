@@ -43,7 +43,7 @@ public interface PerfumeRepository extends JpaRepository<Perfume, Long> {
             @Param("countries") List<CountryType> countries
     );
 
-    List<Perfume> findByIdIn(List<Long> ids);
+    List<Perfume> findAllByIdIn(List<Long> ids);
 
     @Query(value = "SELECT DISTINCT p FROM Perfume p " +
             "INNER JOIN WishPerfume wp ON p = wp.perfume AND wp.customer = :user " +

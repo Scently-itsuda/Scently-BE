@@ -154,7 +154,7 @@ class OotdRepositoryTest {
         em.clear();
 
         // when
-        Ootd findOotd = ootdRepository.findByIdWithOotdImagesAndOotdTags(ootd.getId()).get();
+        Ootd findOotd = ootdRepository.findByIdWithOotdImages(ootd.getId()).get();
         List<OotdImage> ootdImages = findOotd.getOotdImages();
 
         // then
@@ -180,7 +180,6 @@ class OotdRepositoryTest {
 
     private Ootd createOotd(int number) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .user(user)

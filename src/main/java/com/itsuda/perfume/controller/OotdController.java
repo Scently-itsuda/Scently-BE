@@ -42,18 +42,19 @@ public class OotdController {
     @Operation(summary = "OOTD 목록 조회", description = "OOTD들을 정렬 순서에 맞게 조회합니다.")
     @GetMapping
     public ResponseDto<OotdMainDto> getOotdThumbnails(
-            @UserId(required = false) Long userId,
-            @RequestParam(required = false, defaultValue = "NEWEST") OotdOrderType order,
-            @RequestParam int page, @RequestParam int size) {
+            @UserId(required = false) Long userId, @RequestParam int page, @RequestParam int size,
+            @RequestParam(required = false, defaultValue = "NEWEST_DESCENDING") OotdOrderType order
+    ) {
         return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, order, userId));
     }
 
     @Operation(summary = "OOTD 작성", description = "OOTD에 게시글을 작성합니다.")
     @PostMapping
-    public ResponseDto<CreatedOotdDto> createOotd(@UserId Long userId,
-                                                  @Valid @RequestPart CreateOotdDto createOotdDto,
-                                                  @Valid @ModelAttribute ImageFilesDto imageFilesDto) {
-        return new ResponseDto<>(ootdService.createOotd(userId, createOotdDto.content(), createOotdDto.tagNames(),
+    public ResponseDto<CreatedOotdDto> createOotd(
+            @UserId(required = false) Long userId, @Valid @RequestPart CreateOotdDto createOotdDto,
+            @Valid @ModelAttribute ImageFilesDto imageFilesDto
+    ) {
+        return new ResponseDto<>(ootdService.createOotd(1L, createOotdDto.content(), createOotdDto.tagNames(),
                 createOotdDto.volume(), createOotdDto.perfumeIds(), imageFilesDto.images()));
     }
 

@@ -272,7 +272,6 @@ class ReportServiceTest {
 
     private Ootd createOotd(int number, User user) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
                 .user(user)
@@ -283,7 +282,6 @@ class ReportServiceTest {
         return Post.builder()
                 .title("test title" + number)
                 .content("test content" + number)
-                .likeCount(number)
                 .user(user)
                 .build();
     }
@@ -291,7 +289,6 @@ class ReportServiceTest {
     private static Comment createPostComment(int number, Comment parent, Post post, User user) {
         return Comment.builder()
                 .content("test content" + number)
-                .likeCount(number)
                 .parentComment(parent)
                 .post(post)
                 .user(user)

@@ -10,12 +10,10 @@ import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikePost;
 import com.itsuda.perfume.domain.type.PostOrderType;
-import com.itsuda.perfume.dto.response.PageInfoDto;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
-import com.itsuda.perfume.dto.response.post.PostDto;
 import com.itsuda.perfume.dto.response.post.PostInfoDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
 import com.itsuda.perfume.dto.response.post.UserInfoDto;
@@ -30,7 +28,6 @@ import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -59,30 +56,15 @@ public class PostService {
     private final TagRepository tagRepository;
     private final FcmService fcmService;
 
-    // TODO - 추후 전략 패턴 도입
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
-        Page<Post> posts = Page.empty();
-        List<PostDto> postDtos = List.of();
+        Pageable pageable = PageRequest.of(page, size, switch (postOrderType) {
+            case NEWEST_DESCENDING -> Sort.by("createdAt").descending();
+            case NEWEST_ASCENDING -> Sort.by("createdAt").ascending();
+            case POPULAR_DESCENDING -> Sort.by("likeCount").descending();
+            case POPULAR_ASCENDING -> Sort.by("likeCount").ascending();
+        });
 
-        if (postOrderType.equals(PostOrderType.NEWEST_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            posts = postRepository.findAllByDeletedAtIsNull(pageable);
-            postDtos = posts.stream().map(PostDto::from).toList();
-        } else if (postOrderType.equals(PostOrderType.NEWEST_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").ascending());
-            posts = postRepository.findAllByDeletedAtIsNull(pageable);
-            postDtos = posts.stream().map(PostDto::from).toList();
-        } else if (postOrderType.equals(PostOrderType.POPULAR_DESCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").descending());
-            posts = postRepository.findAllByDeletedAtIsNull(pageable);
-            postDtos = posts.stream().map(PostDto::from).toList();
-        } else if (postOrderType.equals(PostOrderType.POPULAR_ASCENDING)) {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("likeCount").ascending());
-            posts = postRepository.findAllByDeletedAtIsNull(pageable);
-            postDtos = posts.stream().map(PostDto::from).toList();
-        }
-
-        return new PostMainDto(postDtos, PageInfoDto.from(posts));
+        return PostMainDto.from(postRepository.findAllByDeletedAtIsNull(pageable));
     }
 
     @Transactional

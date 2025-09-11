@@ -27,6 +27,8 @@ import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.repository.jdbctemplate.PostTagJdbcTemplateRepository;
+import com.itsuda.perfume.repository.jdbctemplate.TagJdbcTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 import static com.itsuda.perfume.domain.type.NotificationType.*;
 import static com.itsuda.perfume.exception.ErrorCode.*;
@@ -45,15 +48,16 @@ import static com.itsuda.perfume.exception.ErrorCode.*;
 @Transactional(readOnly = true)
 public class PostService {
 
+    private final TagJdbcTemplateRepository tagJdbcTemplateRepository;
+    private final PostTagJdbcTemplateRepository postTagJdbcTemplateRepository;
+
     private final UserLikeCommentRepository userLikeCommentRepository;
     private final UserFcmTokenRepository userFcmTokenRepository;
     private final NotificationRepository notificationRepository;
     private final UserLikePostRepository userLikePostRepository;
-    private final PostTagRepository postTagRepository;
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final TagRepository tagRepository;
     private final FcmService fcmService;
 
     public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
@@ -71,10 +75,13 @@ public class PostService {
     public CreatedPostDto createPost(Long userId, String title, String content, List<String> tagNames) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Post post = postRepository.save(Post.builder().title(title).content(content).user(user).build());
-        List<Tag> savedTags = tagRepository.saveAll(tagNames.stream()
-                .map(tag -> Tag.builder().name(tag).build()).toList());
-        postTagRepository.saveAll(savedTags.stream()
-                .map(savedTag -> PostTag.builder().post(post).tag(savedTag).build()).toList());
+
+        List<Tag> tags = tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList();
+        tagJdbcTemplateRepository.batchInsert(tags);
+        Long lastInsertedId = tagJdbcTemplateRepository.getLastInsertedId();
+
+        List<Long> tagIds = LongStream.rangeClosed(lastInsertedId - tags.size() + 1, lastInsertedId).boxed().toList();
+        postTagJdbcTemplateRepository.batchInsert(tagIds, post);
 
         return new CreatedPostDto(post.getId());
     }

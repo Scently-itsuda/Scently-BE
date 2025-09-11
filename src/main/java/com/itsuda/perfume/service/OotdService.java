@@ -113,9 +113,9 @@ public class OotdService {
 
         List<Tag> tags = tagNames.stream().map(tag -> Tag.builder().name(tag).build()).toList();
         tagJdbcTemplateRepository.batchInsert(tags);
-        Long firstInsertedTagId = tagJdbcTemplateRepository.getLastInsertedId();
+        Long lastInsertedId = tagJdbcTemplateRepository.getLastInsertedId();
 
-        List<Long> tagIds = LongStream.rangeClosed(firstInsertedTagId - tags.size() + 1, firstInsertedTagId).boxed().toList();
+        List<Long> tagIds = LongStream.rangeClosed(lastInsertedId - tags.size() + 1, lastInsertedId).boxed().toList();
         ootdTagJdbcTemplateRepository.batchInsert(tagIds, ootd);
 
         s3Util.uploadFiles(FileUtil.getFileBytes(images), OOTD_IMAGE_SAVE_PATH,

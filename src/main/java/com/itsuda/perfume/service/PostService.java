@@ -9,6 +9,7 @@ import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
 import com.itsuda.perfume.domain.UserLikeComment;
 import com.itsuda.perfume.domain.UserLikePost;
+import com.itsuda.perfume.domain.type.NotificationType;
 import com.itsuda.perfume.domain.type.PostOrderType;
 import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
@@ -87,21 +88,15 @@ public class PostService {
     }
 
     public PostDetailDto getPostDetailByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
-        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_POST);
-        }
+        Post post = validatePost(postRepository.findById(postId));
         User user = post.getUser();
 
-        return new PostDetailDto(PostInfoDto.from(post), UserInfoDto.from(user));
+        return PostDetailDto.from(post, user);
     }
 
     @Transactional
     public void deletePostByPostId(Long postId, Long userId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
-        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_POST);
-        }
+        Post post = validatePost(postRepository.findById(postId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         if (!post.getUser().getId().equals(user.getId())) {
             throw new RestApiException(ONLY_POST_OWNER_DELETE);
@@ -111,10 +106,7 @@ public class PostService {
     }
 
     public CommentsDto getCommentsByPostId(Long postId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
-        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_POST);
-        }
+        Post post = validatePost(postRepository.findById(postId));
         List<Comment> comments = commentRepository.findAllByPostAndParentCommentIsNull(post);
 
         return CommentsDto.from(comments);
@@ -122,10 +114,7 @@ public class PostService {
 
     @Transactional
     public void deletePostComment(Long commentId, Long userId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
-        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_COMMENT);
-        }
+        Comment comment = validateComment(commentRepository.findById(commentId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         if (!comment.getUser().getId().equals(user.getId())) {
             throw new RestApiException(ONLY_COMMENT_OWNER_DELETE);
@@ -137,10 +126,7 @@ public class PostService {
     // TODO - 추후 처리율 제한과 비동기 처리 예정
     @Transactional
     public void sendLikeToPost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
-        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_POST);
-        }
+        Post post = validatePost(postRepository.findById(postId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
 
@@ -153,27 +139,12 @@ public class PostService {
 
         userLikePostRepository.save(UserLikePost.builder().post(post).user(user).build());
         post.increaseLikeCount();
-        userFcmToken.ifPresent(fcmToken -> {
-                    Notification notification = notificationRepository.save(
-                            Notification.builder()
-                                    .title(user.getNickname() + "님이 회원님의 OOTD를 추천합니다.")
-                                    .bodyMessage(post.getContent())
-                                    .notificationSender(user)
-                                    .notificationReceiver(post.getUser())
-                                    .targetId(post.getId())
-                                    .notificationType(POST_LIKE)
-                                    .build());
-                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
-                }
-        );
+        sendFCMMessage(userFcmToken, user.getNickname() + "님이 회원님의 자유게시글을 추천합니다.", post.getContent(), user, post.getUser(), post.getId(), POST_LIKE);
     }
 
     @Transactional
     public PostCommentDto writeCommentToPost(Long postId, Long userId, Long commentId, String content) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
-        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_POST);
-        }
+        Post post = validatePost(postRepository.findById(postId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
         Optional<UserFcmToken> userFcmToken = userFcmTokenRepository.findByUser(post.getUser());
         Optional<Comment> parentComment = Optional.ofNullable(commentId).flatMap(commentRepository::findById);
@@ -186,28 +157,13 @@ public class PostService {
                 .user(user)
                 .build());
 
-        userFcmToken.ifPresent(fcmToken -> {
-                    Notification notification = notificationRepository.save(
-                            Notification.builder()
-                                    .title(user.getNickname() + "님이 " + post.getUser() + "님의 게시물에 댓글을 남겼습니다.")
-                                    .bodyMessage(comment.getContent())
-                                    .notificationSender(user)
-                                    .notificationReceiver(comment.getUser())
-                                    .targetId(post.getId())
-                                    .notificationType(POST_COMMENT)
-                                    .build());
-                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
-                }
-        );
+        sendFCMMessage(userFcmToken, user.getNickname() + "님이 " + post.getUser() + "님의 게시물에 댓글을 남겼습니다.", comment.getContent(), user, comment.getUser(), post.getId(), POST_COMMENT);
         return new PostCommentDto(comment.getId());
     }
 
     @Transactional
     public void sendLikeToPostComment(Long userId, Long commentId) {
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
-        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
-            throw new RestApiException(DELETED_COMMENT);
-        }
+        Comment comment = validateComment(commentRepository.findById(commentId));
         User user = userRepository.findById(userId).orElseThrow(() -> new RestApiException(NOT_FOUND_USER));
 
         Optional<UserLikeComment> userLikeComment = userLikeCommentRepository.findByCommentAndUser(comment, user);
@@ -219,5 +175,35 @@ public class PostService {
 
         userLikeCommentRepository.save(UserLikeComment.builder().comment(comment).user(user).build());
         comment.increaseLikeCount();
+    }
+
+    private Post validatePost(Optional<Post> optionalPost) {
+        Post post = optionalPost.orElseThrow(() -> new RestApiException(NOT_FOUND_POST));
+        if (Optional.ofNullable(post.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_POST);
+        }
+        return post;
+    }
+
+    private Comment validateComment(Optional<Comment> optionalComment) {
+        Comment comment = optionalComment.orElseThrow(() -> new RestApiException(NOT_FOUND_COMMENT));
+        if (Optional.ofNullable(comment.getDeletedAt()).isPresent()) {
+            throw new RestApiException(DELETED_COMMENT);
+        }
+        return comment;
+    }
+
+    private void sendFCMMessage(Optional<UserFcmToken> userFcmToken, String title, String bodyMessage, User sender, User receiver, Long targetId, NotificationType notificationType) {
+        userFcmToken.ifPresent(fcmToken -> {
+                    Notification notification = notificationRepository.save(Notification.builder()
+                            .title(title)
+                            .bodyMessage(bodyMessage)
+                            .notificationSender(sender)
+                            .notificationReceiver(receiver)
+                            .targetId(targetId)
+                            .notificationType(notificationType).build());
+                    fcmService.sendFCMMessage(notification.getTitle(), notification.getBodyMessage(), fcmToken.getFcmToken());
+                }
+        );
     }
 }

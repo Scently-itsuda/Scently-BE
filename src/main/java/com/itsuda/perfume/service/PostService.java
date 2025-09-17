@@ -3,7 +3,6 @@ package com.itsuda.perfume.service;
 import com.itsuda.perfume.domain.Comment;
 import com.itsuda.perfume.domain.Notification;
 import com.itsuda.perfume.domain.Post;
-import com.itsuda.perfume.domain.PostTag;
 import com.itsuda.perfume.domain.Tag;
 import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.domain.UserFcmToken;
@@ -15,15 +14,11 @@ import com.itsuda.perfume.dto.response.post.CommentsDto;
 import com.itsuda.perfume.dto.response.post.CreatedPostDto;
 import com.itsuda.perfume.dto.response.post.PostCommentDto;
 import com.itsuda.perfume.dto.response.post.PostDetailDto;
-import com.itsuda.perfume.dto.response.post.PostInfoDto;
 import com.itsuda.perfume.dto.response.post.PostMainDto;
-import com.itsuda.perfume.dto.response.post.UserInfoDto;
 import com.itsuda.perfume.exception.RestApiException;
 import com.itsuda.perfume.repository.CommentRepository;
 import com.itsuda.perfume.repository.NotificationRepository;
 import com.itsuda.perfume.repository.PostRepository;
-import com.itsuda.perfume.repository.PostTagRepository;
-import com.itsuda.perfume.repository.TagRepository;
 import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
@@ -34,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,7 +119,7 @@ public class PostService {
         commentRepository.delete(comment);
     }
 
-    // TODO - 추후 처리율 제한과 비동기 처리 예정
+    @Async
     @Transactional
     public void sendLikeToPost(Long postId, Long userId) {
         Post post = validatePost(postRepository.findById(postId));
@@ -161,6 +157,7 @@ public class PostService {
         return new PostCommentDto(comment.getId());
     }
 
+    @Async
     @Transactional
     public void sendLikeToPostComment(Long userId, Long commentId) {
         Comment comment = validateComment(commentRepository.findById(commentId));

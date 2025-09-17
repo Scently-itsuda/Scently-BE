@@ -24,6 +24,7 @@ import com.itsuda.perfume.repository.UserFcmTokenRepository;
 import com.itsuda.perfume.repository.UserLikeCommentRepository;
 import com.itsuda.perfume.repository.UserLikePostRepository;
 import com.itsuda.perfume.repository.UserRepository;
+import com.itsuda.perfume.service.PostServiceTest.TestAsyncConfig;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,8 +32,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.test.context.ActiveProfiles;
@@ -51,6 +57,7 @@ import static org.mockito.Mockito.doNothing;
 @Transactional
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestAsyncConfig.class)
 class PostServiceTest {
 
     @MockBean
@@ -97,6 +104,15 @@ class PostServiceTest {
         userFcmTokenRepository.save(UserFcmToken.builder().user(user).fcmToken("testToken").build());
         MockitoAnnotations.openMocks(this);
         auditingHandler.setDateTimeProvider(dateTimeProvider);
+    }
+
+    @TestConfiguration
+    static class TestAsyncConfig {
+
+        @Bean(name = "taskExecutor")
+        public TaskExecutor taskExecutor() {
+            return new SyncTaskExecutor();
+        }
     }
 
     @DisplayName("자유게시판에 올라온 게시글의 목록들을 최신순으로 조회한다.")

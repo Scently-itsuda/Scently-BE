@@ -165,12 +165,18 @@ class PostServiceTest {
         // given
         setMockingTime(20);
         Post post1 = postRepository.save(createPost(3, user));
+        post1.increaseLikeCount();
+        post1.increaseLikeCount();
+        post1.increaseLikeCount();
 
         setMockingTime(30);
         Post post2 = postRepository.save(createPost(1, user));
+        post2.increaseLikeCount();
 
         setMockingTime(0);
         Post post3 = postRepository.save(createPost(2, user));
+        post3.increaseLikeCount();
+        post3.increaseLikeCount();
 
         // when
         PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_DESCENDING);
@@ -187,12 +193,18 @@ class PostServiceTest {
         // given
         setMockingTime(20);
         Post post1 = postRepository.save(createPost(3, user));
+        post1.increaseLikeCount();
+        post1.increaseLikeCount();
+        post1.increaseLikeCount();
 
         setMockingTime(30);
         Post post2 = postRepository.save(createPost(1, user));
+        post2.increaseLikeCount();
 
         setMockingTime(0);
         Post post3 = postRepository.save(createPost(2, user));
+        post3.increaseLikeCount();
+        post3.increaseLikeCount();
 
         // when
         PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_ASCENDING);
@@ -457,7 +469,7 @@ class PostServiceTest {
 
         // then
         assertThat(notifications).hasSize(1);
-        assertThat(notifications).extracting("commentWriter").containsExactly(user);
+        assertThat(notifications).extracting("notificationSender").containsExactly(user);
     }
 
     @DisplayName("댓글을 삭제하면 해당 댓글의 삭제날짜를 확인할 수 있고 메시지가 삭제된 메시지입니다라고 바뀌며 좋아요는 0이 된다.")
@@ -468,7 +480,7 @@ class PostServiceTest {
         Comment comment = commentRepository.save(createComment(0, null, post, user));
 
         // when
-        postService.deletePostComment(user.getId(), comment.getId());
+        postService.deletePostComment(comment.getId(), user.getId());
         em.flush();
         em.clear();
         Comment deletedComment = commentRepository.findById(comment.getId()).get();
@@ -488,7 +500,7 @@ class PostServiceTest {
         User otherUser = userRepository.save(createTestUser(1));
 
         // when // then
-        assertThatThrownBy(() -> postService.deletePostComment(otherUser.getId(), comment.getId()))
+        assertThatThrownBy(() -> postService.deletePostComment(comment.getId(), otherUser.getId()))
                 .isInstanceOf(RestApiException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ONLY_COMMENT_OWNER_DELETE);
     }

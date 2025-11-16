@@ -49,7 +49,7 @@ class PostControllerTest {
     void getPosts() throws Exception {
         // given
         PostMainDto result = new PostMainDto(null, null);
-        Mockito.when(postService.getPostsByOrderType(anyInt(), anyInt(), any(PostOrderType.class)))
+        Mockito.when(postService.getPostsByOrderType(anyInt(), anyInt(), "", any(PostOrderType.class)))
                 .thenReturn(result);
 
         // when // then

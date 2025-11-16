@@ -35,9 +35,10 @@ public class PostController {
     @Operation(summary = "자유게시글 목록 조회", description = "자유게시판에 올라온 게시글들을 조회합니다.")
     @GetMapping
     public ResponseDto<PostMainDto> getPosts(
-            @RequestParam(required = false, defaultValue = "NEWEST") PostOrderType order,
-            @RequestParam int page, @RequestParam int size) {
-        return new ResponseDto<>(postService.getPostsByOrderType(page, size, order));
+            @RequestParam int page, @RequestParam int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "NEWEST") PostOrderType order) {
+        return new ResponseDto<>(postService.getPostsByOrderType(page, size, keyword, order));
     }
 
     @Operation(summary = "자유게시글 작성", description = "자유게시판에 게시글을 작성합니다.")

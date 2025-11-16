@@ -129,7 +129,7 @@ class PostServiceTest {
         Post post3 = postRepository.save(createPost(3, user));
 
         // when
-        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.NEWEST_DESCENDING);
+        PostMainDto result = postService.getPostsByOrderType(0, 3, "", PostOrderType.NEWEST_DESCENDING);
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -151,7 +151,7 @@ class PostServiceTest {
         Post post3 = postRepository.save(createPost(3, user));
 
         // when
-        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.NEWEST_ASCENDING);
+        PostMainDto result = postService.getPostsByOrderType(0, 3, "", PostOrderType.NEWEST_ASCENDING);
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -179,7 +179,7 @@ class PostServiceTest {
         post3.increaseLikeCount();
 
         // when
-        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_DESCENDING);
+        PostMainDto result = postService.getPostsByOrderType(0, 3, "", PostOrderType.POPULAR_DESCENDING);
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -207,7 +207,7 @@ class PostServiceTest {
         post3.increaseLikeCount();
 
         // when
-        PostMainDto result = postService.getPostsByOrderType(0, 3, PostOrderType.POPULAR_ASCENDING);
+        PostMainDto result = postService.getPostsByOrderType(0, 3, "", PostOrderType.POPULAR_ASCENDING);
 
         // then
         assertThat(result.dataList()).hasSize(3)

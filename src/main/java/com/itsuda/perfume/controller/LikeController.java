@@ -30,10 +30,10 @@ public class LikeController {
     @Operation(summary = "OOTD 좋아요 모아보기", description = "좋아요를 누른 OOTD들을 순서에 맞게 조회합니다.")
     @GetMapping("/ootds")
     public ResponseDto<UserLikeOotdsDto> getUserLikeOotds(
-            @UserId Long userId,
+            @UserId Long userId, @RequestParam int page, @RequestParam int size,
             @RequestParam(required = false, defaultValue = "NEWEST_DESCENDING") OotdOrderType order,
-            @RequestParam int page, @RequestParam int size) {
-        return new ResponseDto<>(ootdService.getAllUserLikeOotdsByOrderType(page, size, order, 0L));
+            @RequestParam(required = false) String keyword) {
+        return new ResponseDto<>(ootdService.getAllUserLikeOotdsByOrderType(page, size, keyword, order, 0L));
     }
 
     @Operation(summary = "향수 위시 모아보기", description = "위시리스트에 담은 향수들을 조회합니다.")

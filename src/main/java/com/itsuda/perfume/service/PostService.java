@@ -57,7 +57,7 @@ public class PostService {
     private final UserRepository userRepository;
     private final FcmService fcmService;
 
-    public PostMainDto getPostsByOrderType(int page, int size, PostOrderType postOrderType) {
+    public PostMainDto getPostsByOrderType(int page, int size, String keyword, PostOrderType postOrderType) {
         Pageable pageable = PageRequest.of(page, size, switch (postOrderType) {
             case NEWEST_DESCENDING -> Sort.by("createdAt").descending();
             case NEWEST_ASCENDING -> Sort.by("createdAt").ascending();
@@ -65,7 +65,7 @@ public class PostService {
             case POPULAR_ASCENDING -> Sort.by("likeCount").ascending();
         });
 
-        return PostMainDto.from(postRepository.findAllByDeletedAtIsNull(pageable));
+        return PostMainDto.from(postRepository.findAllByDeletedAtIsNullAndTitleContains(pageable, keyword));
     }
 
     @Transactional

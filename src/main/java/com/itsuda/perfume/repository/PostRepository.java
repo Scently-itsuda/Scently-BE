@@ -15,5 +15,5 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = {"user"})
     Optional<Post> findById(Long id);
 
-    Page<Post> findAllByDeletedAtIsNull(Pageable pageable);
+    Page<Post> findAllByDeletedAtIsNullAndTitleContains(Pageable pageable, String keyword);
 }

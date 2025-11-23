@@ -214,7 +214,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, "", OotdOrderType.NEWEST_DESCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -239,7 +239,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.NEWEST_ASCENDING, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, "", OotdOrderType.NEWEST_ASCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -267,7 +267,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_DESCENDING, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, "", OotdOrderType.POPULAR_DESCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -295,7 +295,7 @@ class OotdServiceTest {
         ootdImageRepository.save(createOotdImage(0, savedOotd3));
 
         // when
-        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, OotdOrderType.POPULAR_ASCENDING, user.getId());
+        OotdMainDto result = ootdService.getOotdThumbnailsByOrderType(0, 3, "", OotdOrderType.POPULAR_ASCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(3)
@@ -595,7 +595,7 @@ class OotdServiceTest {
         ootdService.sendLikeToOotd(savedOotd3.getId(), user.getId());
 
         // when
-        UserLikeOotdsDto result = ootdService.getAllUserLikeOotdsByOrderType(0, 3, OotdOrderType.NEWEST_DESCENDING, user.getId());
+        UserLikeOotdsDto result = ootdService.getAllUserLikeOotdsByOrderType(0, 3, "", OotdOrderType.NEWEST_DESCENDING, user.getId());
 
         // then
         assertThat(result.dataList()).hasSize(2)

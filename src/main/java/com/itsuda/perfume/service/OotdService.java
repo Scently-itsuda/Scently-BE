@@ -50,7 +50,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -83,7 +82,7 @@ public class OotdService {
     @Value("${cloud.aws.s3.save-path.ootd-image}")
     private String OOTD_IMAGE_SAVE_PATH;
 
-    public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
+    public OotdMainDto getOotdThumbnailsByOrderType(int page, int size, String keyword, OotdOrderType ootdOrderType, Long userId) {
         Pageable pageable = PageRequest.of(page, size, switch (ootdOrderType) {
             case NEWEST_DESCENDING -> Sort.by("created_at").descending();
             case NEWEST_ASCENDING -> Sort.by("created_at").ascending();
@@ -91,7 +90,7 @@ public class OotdService {
             case POPULAR_ASCENDING -> Sort.by("like_count").ascending();
         });
 
-        return OotdMainDto.from(ootdRepository.findAllIncludingUserLiked(pageable, userId));
+        return OotdMainDto.from(ootdRepository.findAllByKeywordIncludingUserLiked(pageable, userId, keyword));
     }
 
     @Transactional
@@ -218,7 +217,7 @@ public class OotdService {
         comment.increaseLikeCount();
     }
 
-    public UserLikeOotdsDto getAllUserLikeOotdsByOrderType(int page, int size, OotdOrderType ootdOrderType, Long userId) {
+    public UserLikeOotdsDto getAllUserLikeOotdsByOrderType(int page, int size, String keyword, OotdOrderType ootdOrderType, Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new RestApiException(NOT_FOUND_USER);
         }
@@ -230,7 +229,7 @@ public class OotdService {
                     case POPULAR_DESCENDING -> Sort.by("like_count").descending();
                     case POPULAR_ASCENDING -> Sort.by("like_count").ascending();
                 });
-        Page<UserLikeOotdInfo> userLikeOotdInfos = ootdRepository.findAllUserLikeByUser(pageable, userId);
+        Page<UserLikeOotdInfo> userLikeOotdInfos = ootdRepository.findAllByKeywordContainsAndUserLikeByUser(pageable, userId, keyword);
         return UserLikeOotdsDto.from(userLikeOotdInfos.getContent(), PageInfoDto.from(userLikeOotdInfos));
     }
 

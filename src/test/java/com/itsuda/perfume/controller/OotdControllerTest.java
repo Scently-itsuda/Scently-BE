@@ -30,6 +30,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -58,7 +59,7 @@ class OotdControllerTest {
         // given
         OotdMainDto result = new OotdMainDto(null, null);
 
-        Mockito.when(ootdService.getOotdThumbnailsByOrderType(anyInt(), anyInt(), eq(OotdOrderType.NEWEST_DESCENDING), anyLong()))
+        Mockito.when(ootdService.getOotdThumbnailsByOrderType(anyInt(), anyInt(), anyString(), eq(OotdOrderType.NEWEST_DESCENDING), anyLong()))
                 .thenReturn(result);
 
         // when // then

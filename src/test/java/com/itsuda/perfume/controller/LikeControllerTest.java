@@ -44,7 +44,7 @@ class LikeControllerTest {
         // given
         UserLikeOotdsDto result = new UserLikeOotdsDto(null, null);
 
-        Mockito.when(ootdService.getAllUserLikeOotdsByOrderType(anyInt(), anyInt(), eq(OotdOrderType.NEWEST_DESCENDING), anyLong()))
+        Mockito.when(ootdService.getAllUserLikeOotdsByOrderType(anyInt(), anyInt(), anyString(), eq(OotdOrderType.NEWEST_DESCENDING), anyLong()))
                 .thenReturn(result);
 
         // when // then

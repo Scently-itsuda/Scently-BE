@@ -43,9 +43,10 @@ public class OotdController {
     @GetMapping
     public ResponseDto<OotdMainDto> getOotdThumbnails(
             @UserId(required = false) Long userId, @RequestParam int page, @RequestParam int size,
+            @RequestParam(required = false, defaultValue = "") String keyword,
             @RequestParam(required = false, defaultValue = "NEWEST_DESCENDING") OotdOrderType order
     ) {
-        return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, order, userId));
+        return new ResponseDto<>(ootdService.getOotdThumbnailsByOrderType(page, size, keyword, order, userId));
     }
 
     @Operation(summary = "OOTD 작성", description = "OOTD에 게시글을 작성합니다.")

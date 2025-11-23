@@ -103,7 +103,7 @@ class OotdRepositoryTest {
 
         // when
         Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, user.getId());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllByKeywordIncludingUserLiked(pageable, user.getId(), "");
 
         // then
         assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
@@ -133,12 +133,12 @@ class OotdRepositoryTest {
 
         // when
         Pageable pageable = PageRequest.of(0, 3, Sort.by("created_at").descending());
-        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllIncludingUserLiked(pageable, user.getId());
+        Page<OotdThumbnailInfo> ootdThumbnailInfos = ootdRepository.findAllByKeywordIncludingUserLiked(pageable, user.getId(), "");
 
         // then
         assertThat(ootdThumbnailInfos.getContent()).hasSize(3)
                 .extracting(OotdThumbnailInfo::getIsLiked)
-                .containsExactly(1, 0, 1);
+                .containsExactly(true, false, true);
     }
 
     @DisplayName("OOTD 게시글 특정 번호에 해당하는 하나의 게시글과 사진들의 정보를 가져온다.")
@@ -154,7 +154,7 @@ class OotdRepositoryTest {
         em.clear();
 
         // when
-        Ootd findOotd = ootdRepository.findById(ootd.getId()).get();
+        Ootd findOotd = ootdRepository.findByIdWithOotdImages(ootd.getId()).get();
         List<OotdImage> ootdImages = findOotd.getOotdImages();
 
         // then
@@ -180,10 +180,8 @@ class OotdRepositoryTest {
 
     private Ootd createOotd(int number) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
-                .perfume(perfume)
                 .user(user)
                 .build();
     }

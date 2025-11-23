@@ -95,10 +95,8 @@ class UserLikeOotdRepositoryTest {
 
     private Ootd createOotd(int number) {
         return Ootd.builder()
-                .likeCount(number)
                 .volume(10 * number)
                 .content("test" + number)
-                .perfume(perfume)
                 .user(user)
                 .build();
     }

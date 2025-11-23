@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLDelete;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE post SET deleted_at = NOW() WHERE id = ?")
 public class Post extends ModifiableBaseEntity {
 
     @Id
@@ -58,20 +60,17 @@ public class Post extends ModifiableBaseEntity {
     private List<Comment> comments = new ArrayList<>();
 
     @Builder
-    private Post(String title, String content, User user, long viewCount, int likeCount, int commentCount) {
+    private Post(String title, String content, User user) {
         this.title = title;
         this.content = content;
         this.user = user;
-        this.viewCount = viewCount;
-        this.likeCount =likeCount;
-        this.commentCount = commentCount;
     }
 
-    public void decreaseLikeCount() {
-        this.likeCount--;
+    public int increaseLikeCount() {
+        return ++this.likeCount;
     }
 
-    public void increaseLikeCount() {
-        this.likeCount++;
+    public int decreaseLikeCount() {
+        return --this.likeCount;
     }
 }

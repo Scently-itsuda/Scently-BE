@@ -1,5 +1,6 @@
 package com.itsuda.perfume.controller;
 
+import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.dto.request.fcm.FcmTokenRequestDto;
 import com.itsuda.perfume.exception.ResponseDto;
 import com.itsuda.perfume.service.FcmService;
@@ -24,8 +25,10 @@ public class FcmController {
 
     @Operation(summary = "FCM 토큰 등록", description = "사용자의 FCM 토큰을 등록합니다.")
     @PutMapping("/token")
-    public ResponseDto<Map<String, Boolean>> saveUserFcmToken(@Valid @RequestBody FcmTokenRequestDto fcmTokenRequestDto) {
-        fcmService.saveUserFcmToken(0L, fcmTokenRequestDto.fcmToken());
+    public ResponseDto<Map<String, Boolean>> saveUserFcmToken(
+            @UserId Long userId,
+            @Valid @RequestBody FcmTokenRequestDto fcmTokenRequestDto) {
+        fcmService.saveUserFcmToken(userId, fcmTokenRequestDto.fcmToken());
         return new ResponseDto<>(Map.of("isSaved", Boolean.TRUE));
     }
 }

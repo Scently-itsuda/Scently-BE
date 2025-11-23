@@ -8,28 +8,30 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CommentNotification extends Notification {
+public class OotdPerfume {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_writer_id")
-    private User commentWriter;
+    @JoinColumn(name = "ootd_id", nullable = false)
+    private Ootd ootd;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_receiver_id")
-    private User commentReceiver;
+    @JoinColumn(name = "perfume_id", nullable = false)
+    private Perfume perfume;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id")
-    private Comment comment;
-
+    @Builder
+    private OotdPerfume(Ootd ootd, Perfume perfume) {
+        this.ootd = ootd;
+        this.perfume = perfume;
+    }
 }

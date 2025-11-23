@@ -1,5 +1,6 @@
 package com.itsuda.perfume.controller;
 
+import com.itsuda.perfume.annotation.UserId;
 import com.itsuda.perfume.dto.request.PerfumeRequestDto;
 import com.itsuda.perfume.dto.response.PerfumeAccordDto;
 import com.itsuda.perfume.dto.response.PerfumeDetailDto;
@@ -103,5 +104,11 @@ public class PerfumeController {
             @PathVariable Long reviewId,
             @RequestParam Long userId) {
         return new ResponseDto<>(perfumeService.unlikeReview(perfumeId, reviewId, userId));
+    }
+    @Operation(summary = "향수 위시 담기", description = "향수를 위시에 담습니다.")
+    @PostMapping("/{perfumeId}/like")
+    public ResponseDto<Void> wishPerfume(@PathVariable Long perfumeId, @UserId Long userId) {
+        perfumeService.sendWishToPerfume(perfumeId, userId);
+        return new ResponseDto<>(null);
     }
 }

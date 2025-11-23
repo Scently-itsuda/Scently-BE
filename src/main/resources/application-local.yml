@@ -5,7 +5,8 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/scently?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    # 모든 db url 뒤에 rewriteBatchedStatements=true 반드시 추가
+    url: jdbc:mysql://localhost:3306/scently?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true&profileSQL=true&logger=Slf4JLogger&maxQuerySizeToLog=999999
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
@@ -18,6 +19,7 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         highlight_sql: true
+      default_batch_fetch_size: 100
 
   logging.level:
     org:
@@ -31,6 +33,7 @@ spring:
       springframework:
           security: DEBUG
           security.oauth2: DEBUG
+          jdbc: debug
 
 # 로컬 환경 설정
 springdoc:

@@ -49,6 +49,14 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 0B
+      location: ${MULTIPART_SAVE_PATH}
+      max-file-size: 10MB
+      max-request-size: 50MB
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -69,3 +77,21 @@ jwt:
 
 fcm:
   config-path: ${FCM-CONFIG-PATH:/firebase/scently-db31e-firebase-adminsdk-fbsvc-045b7c468d.json}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_IAM_ACCESS_KEY:test}
+      secret-key: ${AWS_IAM_SECRET_KEY:test}
+    s3:
+      endpoint:
+      bucket:
+        name: ${AWS_S3_BUCKET_NAME:test-bucket}
+        expiration-time: ${AWS_S3_EXPIRATION_TIME:259200000}
+      save-path:
+        ootd-image: ${AWS_S3_SAVE_PATH_OOTD_IMAGE:/aws/s3}
+      region:
+        auto: false
+        static: ${AWS_REGION:ap-northeast-2}
+      stack:
+        auto: false

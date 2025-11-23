@@ -13,11 +13,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLDelete;
 
 import java.util.List;
 
 @Entity
 @Getter
+@SQLDelete(sql = "UPDATE comment SET deleted_at = NOW(), content = '삭제된 댓글입니다', like_count = 0 WHERE id = ?")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends ModifiableBaseEntity {
 
@@ -29,9 +32,10 @@ public class Comment extends ModifiableBaseEntity {
     private String content;
 
     @Column(nullable = false)
+    @ColumnDefault("0")
     private int likeCount;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_comment")
     private Comment parentComment;
 
@@ -46,17 +50,24 @@ public class Comment extends ModifiableBaseEntity {
     @JoinColumn(name = "post_id")
     private Post post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @Builder
-    private Comment(String content, int likeCount, Comment parentComment, Ootd ootd, Post post, User user) {
+    private Comment(String content, Comment parentComment, Ootd ootd, Post post, User user) {
         this.content = content;
-        this.likeCount = likeCount;
         this.parentComment = parentComment;
         this.ootd = ootd;
         this.post = post;
         this.user = user;
+    }
+
+    public int increaseLikeCount() {
+        return ++this.likeCount;
+    }
+
+    public int decreaseLikeCount() {
+        return --this.likeCount;
     }
 }

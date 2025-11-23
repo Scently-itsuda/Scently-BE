@@ -3,6 +3,7 @@ package com.itsuda.perfume.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -14,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.SQLDelete;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,7 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@SQLDelete(sql = "UPDATE ootd SET deleted_at = NOW() WHERE id = ?")
 public class Ootd extends ModifiableBaseEntity {
 
     @Id
@@ -49,23 +52,19 @@ public class Ootd extends ModifiableBaseEntity {
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "perfume_id", nullable = false)
-    private Perfume perfume;
-
     @OneToMany(mappedBy = "ootd", fetch = FetchType.LAZY)
     private List<OotdTag> ootdTags = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_OOTD_USER_ID"))
     private User user;
 
+    // ------------------------ 도메인 메서드 ----------------------------
+
     @Builder
-    private Ootd(int likeCount, int volume, String content, Perfume perfume, User user) {
-        this.likeCount = likeCount;
+    private Ootd(int volume, String content, User user) {
         this.volume = volume;
         this.content = content;
-        this.perfume = perfume;
         this.user = user;
     }
 

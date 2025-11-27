@@ -14,6 +14,7 @@ public enum ErrorCode {
     NOT_FOUND_ACCORD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 향입니다"),
     NOT_FOUND_COMMENT("1404", HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다"),
     NOT_FOUND_OOTD("1404", HttpStatus.NOT_FOUND, "존재하지 않는 OOTD 게시글입니다"),
+    NOT_FOUND_REVIEW_LIKE("1404", HttpStatus.NOT_FOUND, "존재하지 않는 리뷰 좋아요입니다"),
     NOT_FOUND_POST("1404", HttpStatus.NOT_FOUND, "존재하는 자유게시글입니다"),
     NOT_FOUND_FILE_PATH("1404", HttpStatus.NOT_FOUND, "존재하지 않는 파일 경로입니다"),
     NOT_FOUND_REVIEW("1404", HttpStatus.NOT_FOUND, "존재하는 리뷰입니다"),
@@ -48,6 +49,7 @@ public enum ErrorCode {
     ONLY_POST_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "자유게시글 작성자만 자유게시글을 삭제할 수 있습니다."),
     ONLY_COMMENT_OWNER_DELETE("1400", HttpStatus.BAD_REQUEST, "댓글 작성자만 댓글을 삭제할 수 있습니다."),
     FCM_TOKEN_INVALID_ERROR("1400", HttpStatus.BAD_REQUEST, "FCM 토큰 형식이 올바르지 않습니다"),
+    ALREADY_LIKED_REVIEW("1400", HttpStatus.BAD_REQUEST, "이미 좋아요를 누른 리뷰입니다"),
     ALREADY_REPORTED_OOTD("1400", HttpStatus.BAD_REQUEST, "이미 신고한 OOTD입니다"),
     ALREADY_REPORTED_POST("1400", HttpStatus.BAD_REQUEST, "이미 신고한 자유게시글입니다"),
     ALREADY_REPORTED_COMMENT("1400", HttpStatus.BAD_REQUEST, "이미 신고한 댓글입니다"),
@@ -71,6 +73,7 @@ public enum ErrorCode {
     TOKEN_UNSUPPORTED_ERROR("1401", HttpStatus.UNAUTHORIZED, "지원하지 않는 토큰입니다"),
     TOKEN_UNKNOWN_ERROR("1401", HttpStatus.UNAUTHORIZED, "알 수 없는 토큰 오류입니다"),
     TOKEN_MALFORMED_ERROR("1401", HttpStatus.UNAUTHORIZED, "토큰 형식이 올바르지 않습니다");
+
 
     private final String code;
     private final HttpStatus httpStatus;

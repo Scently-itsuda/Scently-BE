@@ -5,36 +5,21 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
-
-import com.itsuda.perfume.domain.type.GenderType;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Review {
+public class Review extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String content;
     
-    private int score;
-    
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-    
-    @Column(name = "modified_at")
-    private LocalDateTime modifiedAt;
-    
-    @Column(name = "perfume_gender")
-    @Enumerated(EnumType.STRING)
-    private GenderType perfumeGender;
-    
-    @Column(name = "potential_score")
-    private int potentialScore;
-    
-    private int weight;
+    private Float score;
+
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
 
     // ------------------------ 관계 설정 ----------------------------
     
@@ -45,17 +30,27 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "perfume_id")
     private Perfume perfume;
-
+    
     @Builder
-    private Review(String content, int score, LocalDateTime createdAt, LocalDateTime modifiedAt, GenderType perfumeGender, int potentialScore, int weight, User user, Perfume perfume) {
+    private Review(String content, Float score, User user, Perfume perfume) {
         this.content = content;
         this.score = score;
-        this.createdAt = createdAt;
-        this.modifiedAt = modifiedAt;
-        this.perfumeGender = perfumeGender;
-        this.potentialScore = potentialScore;
-        this.weight = weight;
         this.user = user;
         this.perfume = perfume;
+    }
+
+    public void update(String content, float score) {
+        this.content = content;
+        this.score = score;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 }

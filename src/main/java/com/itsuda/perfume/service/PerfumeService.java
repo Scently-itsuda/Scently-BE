@@ -31,33 +31,20 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.itsuda.perfume.dto.request.PerfumeRequestDto;
-import com.itsuda.perfume.dto.response.PerfumeListDto;
 import com.itsuda.perfume.repository.PerfumeRepository;
 import com.itsuda.perfume.repository.PerfumeReviewLikeRepository;
-import com.itsuda.perfume.domain.PerfumeAccord;
-import com.itsuda.perfume.repository.PerfumeAccordRepository;
 import com.itsuda.perfume.domain.Review;
-import com.itsuda.perfume.domain.User;
 import com.itsuda.perfume.repository.UserRepository;
 import com.itsuda.perfume.dto.request.ReviewRequestDto;
 import com.itsuda.perfume.dto.response.ReviewResponseDto;
 import com.itsuda.perfume.domain.ReviewLike;
 import org.springframework.transaction.annotation.Transactional;
-import com.itsuda.perfume.repository.PerfumeRepository;
-import com.itsuda.perfume.repository.PerfumeVolumeRepository;
-import com.itsuda.perfume.repository.UserRepository;
 import com.itsuda.perfume.repository.WishPerfumeRepository;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -194,21 +181,24 @@ public class PerfumeService {
     // 향수 리뷰 좋아요 취소
     @Transactional
     public ReviewResponseDto unlikeReview(Long perfumeId, Long reviewId, Long userId) {
-        Perfume perfume = perfumeRepository.findById(perfumeId).orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
+        Perfume perfume = perfumeRepository.findById(perfumeId)
+                .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_PERFUME));
 
         Review review = reviewRepository.findByIdAndPerfume(reviewId, perfume)
                 .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW));
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_USER));
 
         ReviewLike reviewLike = reviewLikeRepository.findByReviewAndUser(review, user)
                 .orElseThrow(() -> new RestApiException(ErrorCode.NOT_FOUND_REVIEW_LIKE));
-        
+
         reviewLikeRepository.delete(reviewLike);
         review.decreaseLikeCount();
 
         return ReviewResponseDto.from(review);  // 업데이트된 리뷰 정보 반환
+    }
+
     public OotdPerfumesDto getAllPerfumes() {
         List<OotdPerfumeDto> ootdPerfumes = perfumeRepository.findAll().stream()
                 .map(perfume -> new OotdPerfumeDto(perfume.getId(), perfume.getImageUri(),
